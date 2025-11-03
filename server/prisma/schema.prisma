@@ -1,0 +1,583 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id               String             @id @default(cuid())
+  email            String             @unique
+  username         String             @unique
+  password         String
+  firstName        String
+  lastName         String
+  photoUrl         String?
+  bio              String?
+  major            String?
+  year             Int?
+  skills           String[]
+  interests        String[]
+  role             UserRole           @default(STUDENT)
+  status           UserStatus         @default(ACTIVE)
+  suspendedUntil   DateTime?
+  moderationNote   String?
+  isVerified       Boolean            @default(false)
+  lastActive       DateTime           @default(now())
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+  cohort           String?
+  comments         Comment[]
+  connectedBy      Connection[]       @relation("ConnectedToUser")
+  connections      Connection[]       @relation("UserConnections")
+  events           Event[]
+  groups           GroupMember[]
+  groupMessages    GroupMessage[]
+  likes            Like[]
+  receivedMessages Message[]          @relation("ReceivedMessages")
+  sentMessages     Message[]          @relation("SentMessages")
+  notifications    Notification[]
+  portfolio        Portfolio?
+  posts            Post[]
+  projects         Project[]
+  resources        Resource[]
+  resourceVotes    ResourceVote[]
+  createdGroups    StudyGroup[]       @relation("GroupCreator")
+  studyGroups      StudyGroupMember[]
+  threads              Thread[]
+  threadReplies        ThreadReply[]
+  sessions             Session[]
+  mfaSecret            MFASecret?
+  webAuthnCredentials  WebAuthnCredential[]
+  createdChatRooms     ChatRoom[]         @relation("ChatRoomCreator")
+  chatRoomMemberships  ChatRoomMember[]
+  chatMessages         ChatMessage[]
+
+  @@index([email])
+  @@index([username])
+}
+
+model Post {
+  id        String    @id @default(cuid())
+  content   String
+  mediaUrls String[]
+  authorId  String
+  groupId   String?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  comments  Comment[]
+  likes     Like[]
+  author    User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  group     Group?    @relation(fields: [groupId], references: [id])
+
+  @@index([authorId])
+  @@index([groupId])
+  @@index([createdAt])
+}
+
+model Comment {
+  id        String     @id @default(cuid())
+  content   String
+  postId    String
+  authorId  String
+  parentId  String?
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  author    User       @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  post      Post       @relation(fields: [postId], references: [id], onDelete: Cascade)
+  parent    Comment?   @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies   Comment[]  @relation("CommentReplies")
+
+  @@index([postId])
+  @@index([authorId])
+  @@index([parentId])
+}
+
+model Like {
+  id        String   @id @default(cuid())
+  postId    String
+  userId    String
+  createdAt DateTime @default(now())
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([postId, userId])
+  @@index([postId])
+  @@index([userId])
+}
+
+model Event {
+  id          String    @id @default(cuid())
+  title       String
+  description String
+  location    String?
+  startDate   DateTime
+  endDate     DateTime?
+  imageUrl    String?
+  organizerId String
+  groupId     String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  group       Group?    @relation(fields: [groupId], references: [id])
+  organizer   User      @relation(fields: [organizerId], references: [id], onDelete: Cascade)
+
+  @@index([organizerId])
+  @@index([groupId])
+  @@index([startDate])
+}
+
+model Group {
+  id          String        @id @default(cuid())
+  name        String
+  description String
+  imageUrl    String?
+  category    String?
+  isPrivate   Boolean       @default(false)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  events      Event[]
+  members     GroupMember[]
+  posts       Post[]
+
+  @@index([name])
+  @@index([category])
+}
+
+model GroupMember {
+  id       String    @id @default(cuid())
+  groupId  String
+  userId   String
+  role     GroupRole @default(MEMBER)
+  joinedAt DateTime  @default(now())
+  group    Group     @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([groupId, userId])
+  @@index([groupId])
+  @@index([userId])
+}
+
+model Message {
+  id         String   @id @default(cuid())
+  content    String
+  senderId   String
+  receiverId String
+  isRead     Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  receiver   User     @relation("ReceivedMessages", fields: [receiverId], references: [id], onDelete: Cascade)
+  sender     User     @relation("SentMessages", fields: [senderId], references: [id], onDelete: Cascade)
+
+  @@index([senderId])
+  @@index([receiverId])
+  @@index([createdAt])
+}
+
+model Notification {
+  id        String           @id @default(cuid())
+  type      NotificationType
+  message   String
+  link      String?
+  userId    String
+  isRead    Boolean          @default(false)
+  createdAt DateTime         @default(now())
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([createdAt])
+}
+
+model Portfolio {
+  id         String   @id @default(cuid())
+  userId     String   @unique
+  headline   String?
+  summary    String?
+  resumeUrl  String?
+  website    String?
+  linkedin   String?
+  github     String?
+  experience Json[]
+  education  Json[]
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model Project {
+  id           String   @id @default(cuid())
+  title        String
+  description  String
+  imageUrl     String?
+  projectUrl   String?
+  technologies String[]
+  authorId     String
+  isPublic     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  author       User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@index([authorId])
+  @@index([isPublic])
+}
+
+model Connection {
+  id          String           @id @default(cuid())
+  requesterId String
+  addresseeId String
+  status      ConnectionStatus @default(PENDING)
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  addressee   User             @relation("ConnectedToUser", fields: [addresseeId], references: [id], onDelete: Cascade)
+  requester   User             @relation("UserConnections", fields: [requesterId], references: [id], onDelete: Cascade)
+
+  @@unique([requesterId, addresseeId])
+  @@index([requesterId])
+  @@index([addresseeId])
+}
+
+model Course {
+  id          String       @id @default(cuid())
+  code        String       @unique
+  name        String
+  department  String
+  description String?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  resources   Resource[]
+  studyGroups StudyGroup[]
+  threads     Thread[]
+
+  @@index([code])
+  @@index([department])
+}
+
+model Thread {
+  id        String        @id @default(cuid())
+  title     String
+  content   String
+  courseId  String
+  authorId  String
+  isPinned  Boolean       @default(false)
+  views     Int           @default(0)
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+  author    User          @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  course    Course        @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  replies   ThreadReply[]
+
+  @@index([courseId])
+  @@index([authorId])
+  @@index([createdAt])
+}
+
+model ThreadReply {
+  id        String   @id @default(cuid())
+  content   String
+  threadId  String
+  authorId  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  thread    Thread   @relation(fields: [threadId], references: [id], onDelete: Cascade)
+
+  @@index([threadId])
+  @@index([authorId])
+}
+
+model StudyGroup {
+  id          String             @id @default(cuid())
+  name        String
+  description String?
+  courseId    String?
+  maxMembers  Int                @default(10)
+  meetingTime String?
+  location    String?
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+  cohort      String?
+  creatorId   String
+  isPublic    Boolean            @default(true)
+  meetingDays String[]
+  tags        String[]
+  messages    GroupMessage[]
+  course      Course?            @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  creator     User               @relation("GroupCreator", fields: [creatorId], references: [id], onDelete: Cascade)
+  members     StudyGroupMember[]
+
+  @@index([courseId])
+  @@index([creatorId])
+  @@index([cohort])
+  @@index([isPublic])
+}
+
+model StudyGroupMember {
+  id           String     @id @default(cuid())
+  studyGroupId String
+  userId       String
+  joinedAt     DateTime   @default(now())
+  role         String     @default("member")
+  studyGroup   StudyGroup @relation(fields: [studyGroupId], references: [id], onDelete: Cascade)
+  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([studyGroupId, userId])
+  @@index([studyGroupId])
+  @@index([userId])
+}
+
+model GroupMessage {
+  id           String     @id @default(cuid())
+  content      String
+  studyGroupId String
+  authorId     String
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  author       User       @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  studyGroup   StudyGroup @relation(fields: [studyGroupId], references: [id], onDelete: Cascade)
+
+  @@index([studyGroupId])
+  @@index([authorId])
+  @@index([createdAt])
+}
+
+model Resource {
+  id          String         @id @default(cuid())
+  title       String
+  description String?
+  fileUrl     String
+  fileType    String
+  courseId    String
+  uploaderId  String
+  voteCount   Int            @default(0)
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  course      Course         @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  uploader    User           @relation(fields: [uploaderId], references: [id], onDelete: Cascade)
+  votes       ResourceVote[]
+
+  @@index([courseId])
+  @@index([uploaderId])
+  @@index([voteCount])
+}
+
+model ResourceVote {
+  id         String   @id @default(cuid())
+  resourceId String
+  userId     String
+  value      Int
+  createdAt  DateTime @default(now())
+  resource   Resource @relation(fields: [resourceId], references: [id], onDelete: Cascade)
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([resourceId, userId])
+  @@index([resourceId])
+  @@index([userId])
+}
+
+// ========== MIM (CHAT ROOMS) MODELS ==========
+
+model ChatRoom {
+  id          String           @id @default(cuid())
+  name        String
+  description String?
+  type        ChatRoomType     @default(PUBLIC)
+  password    String?          // Hashed password for private rooms
+  creatorId   String
+  isActive    Boolean          @default(true)
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  creator     User             @relation("ChatRoomCreator", fields: [creatorId], references: [id], onDelete: Cascade)
+  members     ChatRoomMember[]
+  messages    ChatMessage[]
+
+  @@index([creatorId])
+  @@index([type])
+  @@index([isActive])
+}
+
+model ChatRoomMember {
+  id       String       @id @default(cuid())
+  roomId   String
+  userId   String
+  role     ChatRoomRole @default(MEMBER)
+  joinedAt DateTime     @default(now())
+  room     ChatRoom     @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  user     User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([roomId, userId])
+  @@index([roomId])
+  @@index([userId])
+}
+
+model ChatMessage {
+  id        String   @id @default(cuid())
+  roomId    String
+  authorId  String
+  content   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  room      ChatRoom @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@index([roomId])
+  @@index([authorId])
+  @@index([createdAt])
+}
+
+// ========== SECURITY MODELS ==========
+
+model Session {
+  id        String   @id @default(cuid())
+  sid       String   @unique
+  userId    String
+  data      String   // JSON session data
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model VerificationToken {
+  id        String   @id @default(cuid())
+  userId    String
+  token     String   @unique
+  type      TokenType @default(EMAIL_VERIFICATION)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  used      Boolean  @default(false)
+  usedAt    DateTime?
+
+  @@index([userId])
+  @@index([token])
+  @@index([expiresAt])
+}
+
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  used      Boolean  @default(false)
+  usedAt    DateTime?
+
+  @@index([userId])
+  @@index([token])
+  @@index([expiresAt])
+}
+
+model MFASecret {
+  id         String    @id @default(cuid())
+  userId     String    @unique
+  secret     String    // TOTP secret (encrypted)
+  backupCodes String[] // Encrypted recovery codes
+  enabled    Boolean   @default(false)
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model WebAuthnCredential {
+  id             String   @id @default(cuid())
+  userId         String
+  credentialId   String   @unique
+  publicKey      String   // Base64 encoded
+  counter        Int      @default(0)
+  deviceName     String?
+  transports     String[] // JSON array of transports
+  createdAt      DateTime @default(now())
+  lastUsedAt     DateTime @default(now())
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([credentialId])
+}
+
+model AuditLog {
+  id          String   @id @default(cuid())
+  userId      String?
+  action      String   // e.g., 'LOGIN', 'LOGOUT', 'PASSWORD_CHANGE'
+  ipAddress   String?
+  userAgent   String?
+  metadata    String?  // JSON additional data
+  success     Boolean  @default(true)
+  errorMessage String?
+  createdAt   DateTime @default(now())
+
+  @@index([userId])
+  @@index([action])
+  @@index([createdAt])
+}
+
+model RateLimitRecord {
+  id         String   @id @default(cuid())
+  identifier String   // IP address or user ID
+  action     String   // e.g., 'login', 'register'
+  attempts   Int      @default(1)
+  resetAt    DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([identifier, action])
+  @@index([identifier])
+  @@index([resetAt])
+}
+
+// ========== ENUMS ==========
+
+enum TokenType {
+  EMAIL_VERIFICATION
+  PASSWORD_RESET
+  MAGIC_LINK
+}
+
+enum UserRole {
+  STUDENT
+  FACULTY
+  ADMIN
+}
+
+enum GroupRole {
+  ADMIN
+  MODERATOR
+  MEMBER
+}
+
+enum NotificationType {
+  LIKE
+  COMMENT
+  MESSAGE
+  EVENT
+  MENTION
+  CONNECTION
+  GROUP_INVITE
+}
+
+enum ConnectionStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+}
+
+enum UserStatus {
+  ACTIVE
+  SUSPENDED
+  BANNED
+}
+
+enum ChatRoomType {
+  PUBLIC
+  PRIVATE
+}
+
+enum ChatRoomRole {
+  ADMIN
+  MEMBER
+}

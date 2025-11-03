@@ -1,0 +1,39 @@
+{
+  "name": "maestroverse",
+  "version": "1.0.0",
+  "description": "Integrated suite of web applications for Maestro University students",
+  "private": true,
+  "workspaces": [
+    "apps/web",
+    "server",
+    "shared"
+  ],
+  "scripts": {
+    "dev": "npm run docker:start",
+    "docker:start": "docker-compose up -d web",
+    "docker:stop": "docker-compose down",
+    "docker:logs": "docker-compose logs -f web",
+    "build": "docker-compose build web",
+    "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
+    "format": "prettier --write \"**/*.{js,jsx,ts,tsx,json,css,md}\"",
+    "db:migrate": "docker-compose exec server npx prisma migrate deploy",
+    "db:seed": "docker-compose exec server npm run seed",
+    "db:studio": "docker-compose exec server npx prisma studio"
+  },
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@typescript-eslint/parser": "^6.0.0",
+    "concurrently": "^8.2.0",
+    "eslint": "^8.45.0",
+    "eslint-config-prettier": "^9.0.0",
+    "eslint-plugin-react": "^7.32.2",
+    "husky": "^8.0.3",
+    "lint-staged": "^13.2.3",
+    "prettier": "^3.0.0",
+    "typescript": "^5.1.6"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  }
+}

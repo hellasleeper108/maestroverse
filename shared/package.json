@@ -1,0 +1,17 @@
+{
+  "name": "shared",
+  "version": "1.0.0",
+  "description": "Shared components and utilities for Maestroverse",
+  "main": "index.js",
+  "type": "module",
+  "exports": {
+    "./components/*": "./components/*.jsx",
+    "./utils/*": "./utils/*.js"
+  },
+  "dependencies": {
+    "react": "^18.2.0"
+  },
+  "peerDependencies": {
+    "react": "^18.2.0"
+  }
+}

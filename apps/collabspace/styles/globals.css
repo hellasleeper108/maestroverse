@@ -1,0 +1,141 @@
+@import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --cyber-bg: #050505;
+    --cyber-surface: #0f0f1a;
+    --cyber-elevated: rgba(15, 15, 26, 0.92);
+    --cyber-border: #1d1d2f;
+    --cyber-text: #f5f5f7;
+    --cyber-muted: #9aa0b2;
+    --cyber-pink: #ff2d95;
+    --cyber-blue: #4dd0ff;
+    --cyber-purple: #9f7aea;
+    --cyber-glow-pink: 0 0 20px rgba(255, 45, 149, 0.45), 0 0 45px rgba(255, 45, 149, 0.25);
+    --cyber-glow-blue: 0 0 20px rgba(77, 208, 255, 0.4), 0 0 40px rgba(77, 208, 255, 0.25);
+    color-scheme: dark;
+  }
+
+  html {
+    font-family: 'Fira Code', 'JetBrains Mono', 'Cascadia Code', 'Source Code Pro', ui-monospace,
+      SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+    background-color: var(--cyber-bg);
+  }
+
+  body {
+    min-height: 100vh;
+    margin: 0;
+    background:
+      radial-gradient(circle at 15% 20%, rgba(255, 45, 149, 0.20), transparent 55%),
+      radial-gradient(circle at 80% 0%, rgba(77, 208, 255, 0.18), transparent 60%),
+      var(--cyber-bg);
+    color: var(--cyber-text);
+    position: relative;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: -25%;
+    background:
+      radial-gradient(circle at 10% 25%, rgba(255, 45, 149, 0.3), transparent 60%),
+      radial-gradient(circle at 90% 15%, rgba(77, 208, 255, 0.25), transparent 65%);
+    filter: blur(110px);
+    pointer-events: none;
+    z-index: -2;
+  }
+
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: radial-gradient(circle at 50% 120%, rgba(159, 122, 234, 0.18), transparent 70%);
+    filter: blur(120px);
+    pointer-events: none;
+    z-index: -2;
+  }
+
+  * {
+    border-color: var(--cyber-border);
+  }
+
+  a {
+    color: var(--cyber-blue);
+    text-decoration: none;
+    transition: color 150ms ease, text-shadow 150ms ease;
+  }
+
+  a:hover {
+    color: var(--cyber-pink);
+    text-shadow: 0 0 12px rgba(255, 45, 149, 0.5);
+  }
+
+  button,
+  input,
+  textarea,
+  select {
+    font-family: inherit;
+    color: var(--cyber-text);
+    background-color: var(--cyber-elevated);
+    border-radius: 0.75rem;
+    border-width: 1px;
+    border-style: solid;
+    border-color: transparent;
+    transition: border-color 150ms ease, box-shadow 150ms ease, transform 150ms ease;
+  }
+
+  button:hover,
+  input:focus,
+  textarea:focus,
+  select:focus {
+    outline: none;
+    border-color: rgba(77, 208, 255, 0.4);
+    box-shadow: var(--cyber-glow-blue);
+  }
+
+  ::selection {
+    background: rgba(255, 45, 149, 0.35);
+    color: var(--cyber-text);
+  }
+
+  ::-webkit-scrollbar {
+    width: 10px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: rgba(15, 15, 26, 0.7);
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, rgba(255, 45, 149, 0.75), rgba(77, 208, 255, 0.75));
+    border-radius: 9999px;
+    border: 2px solid rgba(15, 15, 26, 0.9);
+  }
+}
+
+@layer components {
+  .cyber-card {
+    background: linear-gradient(145deg, rgba(15, 15, 26, 0.95), rgba(10, 10, 20, 0.9));
+    border-radius: 1rem;
+    border: 1px solid rgba(77, 208, 255, 0.15);
+    box-shadow: 0 0 18px rgba(255, 45, 149, 0.12), 0 0 32px rgba(77, 208, 255, 0.12);
+    transition: transform 200ms ease, box-shadow 200ms ease, border-color 200ms ease;
+  }
+
+  .cyber-card:hover {
+    transform: translateY(-4px);
+    border-color: rgba(255, 45, 149, 0.45);
+    box-shadow: 0 0 28px rgba(255, 45, 149, 0.22), 0 0 38px rgba(77, 208, 255, 0.25);
+  }
+
+  .cyber-heading {
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.86);
+    text-shadow: 0 0 16px rgba(77, 208, 255, 0.45);
+  }
+}
