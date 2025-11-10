@@ -34,6 +34,7 @@ function CareerLink({ user, setUser }) {
     router.push('/login');
   }
 
+
   return (
     <div className="min-h-screen bg-gray-900">
       <Navbar currentModule="CareerLink" user={user} onLogout={handleLogout} />
@@ -52,7 +53,9 @@ function CareerLink({ user, setUser }) {
             <div className="bg-gray-800 border border-gray-700 rounded-lg p-6 hover:bg-gray-750 transition-colors cursor-pointer">
               <div className="text-3xl mb-3">📝</div>
               <h3 className="text-white font-semibold mb-1">My Portfolio</h3>
-              <p className="text-gray-400 text-sm">Manage your professional profile and resume</p>
+              <p className="text-gray-400 text-sm">
+                Manage your professional profile and resume
+              </p>
             </div>
           </Link>
 
@@ -60,7 +63,9 @@ function CareerLink({ user, setUser }) {
             <div className="bg-gray-800 border border-gray-700 rounded-lg p-6 hover:bg-gray-750 transition-colors cursor-pointer">
               <div className="text-3xl mb-3">🚀</div>
               <h3 className="text-white font-semibold mb-1">My Projects</h3>
-              <p className="text-gray-400 text-sm">Showcase your academic and personal projects</p>
+              <p className="text-gray-400 text-sm">
+                Showcase your academic and personal projects
+              </p>
             </div>
           </Link>
 
@@ -68,7 +73,9 @@ function CareerLink({ user, setUser }) {
             <div className="bg-gray-800 border border-gray-700 rounded-lg p-6 hover:bg-gray-750 transition-colors cursor-pointer">
               <div className="text-3xl mb-3">🔍</div>
               <h3 className="text-white font-semibold mb-1">Browse Students</h3>
-              <p className="text-gray-400 text-sm">Find and connect with talented peers</p>
+              <p className="text-gray-400 text-sm">
+                Find and connect with talented peers
+              </p>
             </div>
           </Link>
         </div>
@@ -91,10 +98,14 @@ function CareerLink({ user, setUser }) {
                   key={project.id}
                   className="bg-gray-800 border border-gray-700 rounded-lg overflow-hidden hover:border-teal-500 transition-colors"
                 >
-                  {project.imageUrl && <div className="h-48 bg-gray-700" />}
+                  {project.imageUrl && (
+                    <div className="h-48 bg-gray-700" />
+                  )}
                   <div className="p-6">
                     <h3 className="text-white font-semibold mb-2">{project.title}</h3>
-                    <p className="text-gray-400 text-sm mb-4 line-clamp-2">{project.description}</p>
+                    <p className="text-gray-400 text-sm mb-4 line-clamp-2">
+                      {project.description}
+                    </p>
                     <div className="flex flex-wrap gap-2 mb-4">
                       {project.technologies.slice(0, 3).map((tech, i) => (
                         <span
@@ -109,9 +120,7 @@ function CareerLink({ user, setUser }) {
                       <div className="w-6 h-6 bg-gradient-to-br from-teal-400 to-cyan-500 rounded-full flex items-center justify-center text-white text-xs">
                         {project.author.firstName[0]}
                       </div>
-                      <span>
-                        {project.author.firstName} {project.author.lastName}
-                      </span>
+                      <span>{project.author.firstName} {project.author.lastName}</span>
                     </div>
                   </div>
                 </div>

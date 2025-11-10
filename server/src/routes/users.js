@@ -2,8 +2,6 @@ import express from 'express';
 import { PrismaClient } from '@prisma/client';
 import { authenticate } from '../middleware/auth.js';
 import { z } from 'zod';
-import { imageUploadMiddleware } from '../middleware/fileUpload.js';
-import { createPublicSignedUrl } from '../utils/signedUrls.js';
 
 const router = express.Router();
 const prisma = new PrismaClient();
@@ -142,41 +140,35 @@ router.put('/profile', authenticate, async (req, res) => {
 
 /**
  * POST /api/users/upload-photo
- * Upload profile photo with secure file handling
- * - MIME-type validation (JPEG, PNG, GIF, WebP only)
- * - Max file size: 5 MB
- * - Secure filename generation (prevents path traversal)
- * - Private storage with signed URL access
+ * Upload profile photo
  */
-router.post('/upload-photo', authenticate, imageUploadMiddleware, async (req, res) => {
+router.post('/upload-photo', authenticate, async (req, res) => {
   try {
-    // File validation and secure upload handled by middleware
-    const { filename, category } = req.uploadedFile;
+    if (!req.files || !req.files.photo) {
+      return res.status(400).json({ error: 'No photo file provided' });
+    }
 
-    // Generate signed URL for accessing the photo (24 hour expiry)
-    const signedUrl = createPublicSignedUrl(filename, category, {
-      expiresIn: 24 * 60 * 60, // 24 hours
-      userId: req.user.id,
-    });
+    const photo = req.files.photo;
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
 
-    // Store the filename reference (not the signed URL, as it expires)
-    // Frontend will need to regenerate signed URLs periodically
-    const photoData = JSON.stringify({
-      filename,
-      category,
-    });
+    if (!allowedTypes.includes(photo.mimetype)) {
+      return res.status(400).json({ error: 'Invalid file type. Only JPEG, PNG, and GIF allowed' });
+    }
 
-    // Update user's photo URL with secure reference
+    const filename = `${req.user.id}_${Date.now()}_${photo.name}`;
+    const uploadPath = `uploads/photos/${filename}`;
+
+    await photo.mv(uploadPath);
+
+    const photoUrl = `/uploads/photos/${filename}`;
+
+    // Update user's photo URL
     await prisma.user.update({
       where: { id: req.user.id },
-      data: { photoUrl: photoData },
+      data: { photoUrl },
     });
 
-    res.json({
-      photoUrl: signedUrl,
-      filename,
-      message: 'Photo uploaded successfully',
-    });
+    res.json({ photoUrl });
   } catch (error) {
     console.error('Upload photo error:', error);
     res.status(500).json({ error: 'Failed to upload photo' });

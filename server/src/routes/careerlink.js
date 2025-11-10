@@ -124,7 +124,9 @@ router.get('/projects', authenticate, async (req, res) => {
   try {
     const { userId } = req.query;
 
-    const where = userId ? { authorId: userId } : { isPublic: true };
+    const where = userId
+      ? { authorId: userId }
+      : { isPublic: true };
 
     const projects = await prisma.project.findMany({
       where,
@@ -259,7 +261,10 @@ router.get('/connections', authenticate, async (req, res) => {
   try {
     const connections = await prisma.connection.findMany({
       where: {
-        OR: [{ requesterId: req.user.id }, { addresseeId: req.user.id }],
+        OR: [
+          { requesterId: req.user.id },
+          { addresseeId: req.user.id },
+        ],
         status: 'ACCEPTED',
       },
       include: {

@@ -21,8 +21,7 @@
   }
 
   html {
-    font-family:
-      'Fira Code', 'JetBrains Mono', 'Cascadia Code', 'Source Code Pro', ui-monospace,
+    font-family: 'Fira Code', 'JetBrains Mono', 'Cascadia Code', 'Source Code Pro', ui-monospace,
       SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
     background-color: var(--cyber-bg);
   }
@@ -32,7 +31,8 @@
     margin: 0;
     background:
       radial-gradient(circle at 15% 20%, rgba(255, 45, 149, 0.06), transparent 55%),
-      radial-gradient(circle at 80% 0%, rgba(77, 208, 255, 0.05), transparent 60%), var(--cyber-bg);
+      radial-gradient(circle at 80% 0%, rgba(77, 208, 255, 0.05), transparent 60%),
+      var(--cyber-bg);
     color: var(--cyber-text);
     position: relative;
   }
@@ -66,9 +66,7 @@
   a {
     color: var(--cyber-blue);
     text-decoration: none;
-    transition:
-      color 150ms ease,
-      text-shadow 150ms ease;
+    transition: color 150ms ease, text-shadow 150ms ease;
   }
 
   a:hover {
@@ -87,10 +85,7 @@
     border-width: 1px;
     border-style: solid;
     border-color: transparent;
-    transition:
-      border-color 150ms ease,
-      box-shadow 150ms ease,
-      transform 150ms ease;
+    transition: border-color 150ms ease, box-shadow 150ms ease, transform 150ms ease;
   }
 
   button:hover,
@@ -127,21 +122,14 @@
     background: linear-gradient(145deg, rgba(15, 15, 26, 0.95), rgba(10, 10, 20, 0.9));
     border-radius: 1rem;
     border: 1px solid rgba(77, 208, 255, 0.1);
-    box-shadow:
-      0 0 8px rgba(255, 45, 149, 0.04),
-      0 0 16px rgba(77, 208, 255, 0.04);
-    transition:
-      transform 200ms ease,
-      box-shadow 200ms ease,
-      border-color 200ms ease;
+    box-shadow: 0 0 8px rgba(255, 45, 149, 0.04), 0 0 16px rgba(77, 208, 255, 0.04);
+    transition: transform 200ms ease, box-shadow 200ms ease, border-color 200ms ease;
   }
 
   .cyber-card:hover {
     transform: translateY(-2px);
     border-color: rgba(255, 45, 149, 0.2);
-    box-shadow:
-      0 0 12px rgba(255, 45, 149, 0.08),
-      0 0 20px rgba(77, 208, 255, 0.08);
+    box-shadow: 0 0 12px rgba(255, 45, 149, 0.08), 0 0 20px rgba(77, 208, 255, 0.08);
   }
 
   .cyber-heading {

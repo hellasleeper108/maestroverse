@@ -260,16 +260,16 @@ function StudyGroupCard({ group, onJoin, onClick, showMembershipBadge, membershi
       <div className="flex items-start justify-between mb-4">
         <div className="flex-1">
           <h3 className="text-white font-semibold text-lg mb-1">{group.name}</h3>
-          {group.course && <p className="text-teal-400 text-sm">{group.course.code}</p>}
+          {group.course && (
+            <p className="text-teal-400 text-sm">{group.course.code}</p>
+          )}
         </div>
         {showMembershipBadge && (
-          <span
-            className={`px-2 py-1 rounded text-xs font-medium ${
-              membershipRole === 'admin'
-                ? 'bg-purple-600/20 text-purple-400'
-                : 'bg-gray-700 text-gray-300'
-            }`}
-          >
+          <span className={`px-2 py-1 rounded text-xs font-medium ${
+            membershipRole === 'admin'
+              ? 'bg-purple-600/20 text-purple-400'
+              : 'bg-gray-700 text-gray-300'
+          }`}>
             {membershipRole}
           </span>
         )}
@@ -297,9 +297,7 @@ function StudyGroupCard({ group, onJoin, onClick, showMembershipBadge, membershi
       {/* Info */}
       <div className="flex items-center justify-between text-sm pt-4 border-t border-gray-700">
         <div className="flex items-center space-x-4 text-gray-400">
-          <span>
-            👥 {group._count?.members || 0}/{group.maxMembers}
-          </span>
+          <span>👥 {group._count?.members || 0}/{group.maxMembers}</span>
           <span>💬 {group._count?.messages || 0}</span>
         </div>
 

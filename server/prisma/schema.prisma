@@ -49,8 +49,6 @@ model User {
   threads              Thread[]
   threadReplies        ThreadReply[]
   sessions             Session[]
-  refreshTokens        RefreshToken[]
-  oauthAccounts        OAuthAccount[]
   mfaSecret            MFASecret?
   webAuthnCredentials  WebAuthnCredential[]
   createdChatRooms     ChatRoom[]         @relation("ChatRoomCreator")
@@ -444,44 +442,6 @@ model Session {
   @@index([expiresAt])
 }
 
-model RefreshToken {
-  id        String   @id @default(cuid())
-  token     String   @unique
-  userId    String
-  expiresAt DateTime
-  createdAt DateTime @default(now())
-  isRevoked Boolean  @default(false)
-  ipAddress String?
-  userAgent String?
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([userId])
-  @@index([token])
-  @@index([expiresAt])
-  @@index([isRevoked])
-}
-
-model OAuthAccount {
-  id           String   @id @default(cuid())
-  userId       String
-  provider     OAuthProvider
-  providerId   String   // User ID from OAuth provider
-  email        String?
-  displayName  String?
-  profileUrl   String?
-  accessToken  String?  // Encrypted in production
-  refreshToken String?  // Encrypted in production
-  expiresAt    DateTime?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@unique([provider, providerId])
-  @@index([userId])
-  @@index([provider])
-  @@index([providerId])
-}
-
 model VerificationToken {
   id        String   @id @default(cuid())
   userId    String
@@ -581,7 +541,6 @@ enum TokenType {
 enum UserRole {
   STUDENT
   FACULTY
-  MODERATOR
   ADMIN
 }
 
@@ -621,9 +580,4 @@ enum ChatRoomType {
 enum ChatRoomRole {
   ADMIN
   MEMBER
-}
-
-enum OAuthProvider {
-  GOOGLE
-  GITHUB
 }

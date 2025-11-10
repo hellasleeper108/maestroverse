@@ -77,7 +77,9 @@ function Login({ setUser }) {
         </div>
 
         <div className="mt-4 text-center">
-          <p className="text-gray-400 text-sm">Use the same credentials from Student Hub</p>
+          <p className="text-gray-400 text-sm">
+            Use the same credentials from Student Hub
+          </p>
         </div>
       </div>
     </div>

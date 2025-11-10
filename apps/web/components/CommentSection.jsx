@@ -278,18 +278,13 @@ function CommentSection({ postId, comments, onCommentAdded, onCommentsUpdated })
   };
 
   // Get current user ID from user context (passed via page)
-  const currentUserId =
-    typeof window !== 'undefined'
-      ? JSON.parse(localStorage.getItem('maestro_user') || '{}').id
-      : null;
+  const currentUserId = typeof window !== 'undefined' ?
+    JSON.parse(localStorage.getItem('maestro_user') || '{}').id : null;
 
   return (
     <div className="space-y-4">
       {/* New Comment Form */}
-      <form
-        onSubmit={handleCommentSubmit}
-        className="bg-gray-800 rounded-lg p-4 border border-gray-700"
-      >
+      <form onSubmit={handleCommentSubmit} className="bg-gray-800 rounded-lg p-4 border border-gray-700">
         <textarea
           value={newComment}
           onChange={(e) => setNewComment(e.target.value)}
@@ -312,9 +307,7 @@ function CommentSection({ postId, comments, onCommentAdded, onCommentsUpdated })
       {/* Comments List */}
       <div className="space-y-3">
         {comments.length === 0 ? (
-          <p className="text-gray-400 text-center py-8">
-            No comments yet. Be the first to comment!
-          </p>
+          <p className="text-gray-400 text-center py-8">No comments yet. Be the first to comment!</p>
         ) : (
           comments.map((comment) => (
             <Comment

@@ -13,8 +13,6 @@ import session from 'express-session';
 import connectPgSimple from 'connect-pg-simple';
 import { PrismaClient } from '@prisma/client';
 import pg from 'pg';
-import { nanoid } from 'nanoid';
-import crypto from 'crypto';
 
 const prisma = new PrismaClient();
 const PgSession = connectPgSimple(session);
@@ -61,6 +59,7 @@ export const sessionConfig = {
   },
   // Custom session ID generator (nanoid for better entropy)
   genid: () => {
+    const { nanoid } = require('nanoid');
     return nanoid(32);
   },
 };
@@ -367,6 +366,7 @@ export function sessionFingerprint(req) {
   const userAgent = req.headers['user-agent'] || '';
   const ip = req.ip || req.connection?.remoteAddress || '';
 
+  const crypto = require('crypto');
   return crypto
     .createHash('sha256')
     .update(userAgent + ip)

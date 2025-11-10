@@ -3,7 +3,6 @@
 Complete step-by-step guide to setting up the Maestroverse development environment.
 
 ## Table of Contents
-
 1. [Prerequisites](#prerequisites)
 2. [Installation](#installation)
 3. [Configuration](#configuration)
@@ -39,7 +38,6 @@ Complete step-by-step guide to setting up the Maestroverse development environme
 3. **PostgreSQL 15** (Only if not using Docker)
    - Download: https://www.postgresql.org/download/
    - Or install via package manager:
-
      ```bash
      # macOS
      brew install postgresql@15
@@ -75,7 +73,6 @@ npm install
 ```
 
 This will install dependencies for:
-
 - Root workspace
 - Server
 - All frontend applications (hub, careerlink, collabspace)
@@ -133,7 +130,6 @@ CORS_ORIGINS=http://localhost:3005
 ```
 
 **Important Security Notes:**
-
 - ⚠️ **Change `JWT_SECRET` in production to a long, random string**
 - ⚠️ **Never commit `.env` to version control**
 - ⚠️ **Use environment-specific `.env` files for different environments**
@@ -147,33 +143,27 @@ CORS_ORIGINS=http://localhost:3005
 This is the easiest method as it handles PostgreSQL and Redis automatically.
 
 1. **Start the stack (web + API + data stores):**
-
    ```bash
    npm run dev
    ```
 
 2. **Wait for services to be ready** (about 30 seconds)
-
    ```bash
    docker-compose ps
    ```
-
    All services should show "Up" status.
 
 3. **Run database migrations:**
-
    ```bash
    npm run db:migrate
    ```
 
 4. **Generate Prisma client:**
-
    ```bash
    docker-compose exec server npx prisma generate
    ```
 
 5. **Seed the database:**
-
    ```bash
    npm run db:seed
    ```
@@ -188,7 +178,6 @@ This is the easiest method as it handles PostgreSQL and Redis automatically.
 If you prefer to run services locally:
 
 1. **Start PostgreSQL:**
-
    ```bash
    # macOS (if installed via Homebrew)
    brew services start postgresql@15
@@ -201,13 +190,11 @@ If you prefer to run services locally:
    ```
 
 2. **Create database:**
-
    ```bash
    createdb maestroverse
    ```
 
    Or via psql:
-
    ```sql
    CREATE DATABASE maestroverse;
    CREATE USER maestro WITH PASSWORD 'maestro123';
@@ -215,19 +202,16 @@ If you prefer to run services locally:
    ```
 
 3. **Navigate to server directory:**
-
    ```bash
    cd server
    ```
 
 4. **Run migrations:**
-
    ```bash
    npx prisma migrate deploy
    ```
 
 5. **Generate Prisma client:**
-
    ```bash
    npx prisma generate
    ```
@@ -275,11 +259,11 @@ npm run dev --workspace=apps/web
 
 After seeding, use these demo credentials:
 
-| Name  | Email             | Password    | Major            |
-| ----- | ----------------- | ----------- | ---------------- |
-| Alice | alice@maestro.edu | password123 | Computer Science |
-| Bob   | bob@maestro.edu   | password123 | Software Eng.    |
-| Carol | carol@maestro.edu | password123 | Design & Tech    |
+| Name  | Email              | Password    | Major              |
+|-------|-------------------|-------------|-------------------|
+| Alice | alice@maestro.edu | password123 | Computer Science  |
+| Bob   | bob@maestro.edu   | password123 | Software Eng.     |
+| Carol | carol@maestro.edu | password123 | Design & Tech     |
 
 ---
 
@@ -292,7 +276,6 @@ curl http://localhost:3001/health
 ```
 
 Expected response:
-
 ```json
 {
   "status": "ok",
@@ -319,7 +302,6 @@ Should return user data and a JWT token.
 ### 4. Check Database
 
 Using Prisma Studio:
-
 ```bash
 npm run db:studio
 ```
@@ -337,7 +319,6 @@ Opens at http://localhost:5555 - browse all database records.
 **Error:** `Port 3000, 3001, or 3005 is already in use`
 
 **Solution:**
-
 ```bash
 # Find process using the port (example for 3001)
 lsof -i :3001
@@ -353,7 +334,6 @@ kill -9 <PID>
 **Error:** `Can't reach database server at localhost:5432`
 
 **Docker:**
-
 ```bash
 # Restart PostgreSQL container
 docker-compose restart postgres
@@ -363,7 +343,6 @@ docker-compose logs postgres
 ```
 
 **Local:**
-
 ```bash
 # Check if PostgreSQL is running
 pg_isready
@@ -378,7 +357,6 @@ sudo systemctl start postgresql    # Linux
 **Error:** `Migration failed` or `Database schema is not in sync`
 
 **Solution:**
-
 ```bash
 cd server
 
@@ -394,7 +372,6 @@ npx prisma generate
 **Error:** `Invalid token` or `TokenExpiredError`
 
 **Solution:**
-
 - Clear browser localStorage
 - Check `JWT_SECRET` in `.env` matches across all services
 - Re-login to get a fresh token
@@ -404,7 +381,6 @@ npx prisma generate
 **Error:** `Cannot find module 'xyz'`
 
 **Solution:**
-
 ```bash
 # Clean install
 rm -rf node_modules
@@ -419,7 +395,6 @@ npm ci
 #### 6. Docker Issues
 
 **Container won't start:**
-
 ```bash
 # Stop all containers
 docker-compose down
@@ -432,7 +407,6 @@ docker-compose up --build -d
 ```
 
 **Check container logs:**
-
 ```bash
 docker-compose logs -f [service-name]
 # Examples:
@@ -453,7 +427,6 @@ docker-compose logs -f hub
    - Docker version: `docker --version`
 
 3. **Database status:**
-
    ```bash
    # With Docker
    docker-compose exec postgres pg_isready
@@ -488,7 +461,6 @@ After successful setup:
    - Test your changes in real-time
 
 4. **Run database operations:**
-
    ```bash
    # View data in Prisma Studio
    cd server && npm run prisma:studio

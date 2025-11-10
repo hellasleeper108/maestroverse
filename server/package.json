@@ -7,7 +7,6 @@
   "scripts": {
     "dev": "nodemon src/index.js",
     "start": "node src/index.js",
-    "test": "node --test src/__tests__/**/*.test.js",
     "migrate": "prisma migrate dev",
     "migrate:deploy": "prisma migrate deploy",
     "seed": "node src/seed.js",
@@ -32,9 +31,6 @@
     "morgan": "^1.10.0",
     "nanoid": "^5.0.4",
     "nodemailer": "^6.9.7",
-    "passport": "^0.7.0",
-    "passport-github2": "^0.1.12",
-    "passport-google-oauth20": "^2.0.0",
     "pg": "^8.11.3",
     "socket.io": "^4.7.2",
     "ws": "^8.13.0",

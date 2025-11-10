@@ -7,7 +7,7 @@ const csp = [
   `script-src 'self'${isProd ? '' : " 'unsafe-eval'"}`,
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob:",
-  "font-src 'self'",
+  'font-src \'self\'',
   `connect-src 'self' ${apiUrl} ${wsUrl}`,
   "media-src 'none'",
   "object-src 'none'",

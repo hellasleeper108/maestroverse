@@ -23,7 +23,9 @@ function PostCard({ post, onLike, onComment, onDelete, currentUserId }) {
                 {post.author.firstName} {post.author.lastName}
               </p>
             </Link>
-            {post.group && <span className="text-teal-400 text-sm">→ {post.group.name}</span>}
+            {post.group && (
+              <span className="text-teal-400 text-sm">→ {post.group.name}</span>
+            )}
           </div>
           <p className="text-gray-400 text-sm">
             {new Date(post.createdAt).toLocaleDateString('en-US', {

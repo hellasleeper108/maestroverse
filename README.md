@@ -7,7 +7,6 @@ Maestroverse now ships as a unified Next.js application that brings the Student 
 ## Features
 
 ### Student Hub
-
 - User profiles with photos, majors, skills, and interests
 - Social feed with posts, comments, and likes
 - Direct messaging system
@@ -16,7 +15,6 @@ Maestroverse now ships as a unified Next.js application that brings the Student 
 - Real-time notifications
 
 ### CareerLink
-
 - Digital portfolio builder
 - Project showcase
 - Resume management
@@ -25,7 +23,6 @@ Maestroverse now ships as a unified Next.js application that brings the Student 
 - Connection requests
 
 ### CollabSpace
-
 - Course-specific discussion forums
 - Study group formation and management
 - Resource sharing (notes, slides, etc.)
@@ -35,14 +32,12 @@ Maestroverse now ships as a unified Next.js application that brings the Student 
 ## Tech Stack
 
 ### Frontend
-
 - **Framework:** Next.js 14 (React 18)
 - **Styling:** TailwindCSS
 - **State Management:** React Hooks
 - **Real-time:** Socket.IO Client
 
 ### Backend
-
 - **Runtime:** Node.js 18+
 - **Framework:** Express.js
 - **Database:** PostgreSQL 15
@@ -52,7 +47,6 @@ Maestroverse now ships as a unified Next.js application that brings the Student 
 - **File Uploads:** express-fileupload
 
 ### DevOps
-
 - **Containerization:** Docker & Docker Compose
 - **Caching:** Redis
 - **Process Management:** PM2 (production)
@@ -88,7 +82,6 @@ maestroverse/
 ## Getting Started
 
 ### Prerequisites
-
 - Node.js 18+ and npm 9+
 - Docker and Docker Compose (for containerized setup)
 - PostgreSQL 15 (if running locally without Docker)
@@ -96,20 +89,17 @@ maestroverse/
 ### Quick Start (Docker-first)
 
 1. **Clone the repository**
-
 ```bash
 git clone <repository-url>
 cd maestroverse
 ```
 
 2. **Install root dependencies (provides helper scripts)**
-
 ```bash
 npm install
 ```
 
 3. **Copy environment variables**
-
 ```bash
 cp .env.example .env
 ```
@@ -118,25 +108,21 @@ cp .env.example .env
    Open `.env` and set `ROOT_ADMIN_EMAILS=your.email@maestro.edu` so your account is automatically promoted to `ADMIN` on login.
 
 5. **Start the stack (web + API + data stores)**
-
 ```bash
 npm run dev
 ```
 
 6. **Run database migrations**
-
 ```bash
 npm run db:migrate
 ```
 
 7. **Seed the database with demo data (optional)**
-
 ```bash
 npm run db:seed
 ```
 
 8. **Access the application**
-
 - Unified web app: http://localhost:3005
 - API + WebSocket server: http://localhost:3001 / ws://localhost:3001
 
@@ -149,16 +135,14 @@ Done for the day? `npm run docker:stop`
 Running outside of Docker is possible, but you will need to start the API and unified web frontend separately.
 
 1. **Install dependencies**
-
 ```bash
 npm install
 ```
 
 2. **Provision PostgreSQL & configure `.env`**  
-   Create the `maestroverse` database and update `.env` with your credentials.
+Create the `maestroverse` database and update `.env` with your credentials.
 
 3. **Run migrations and generate Prisma client**
-
 ```bash
 cd server
 npx prisma migrate deploy
@@ -168,7 +152,6 @@ cd ..
 ```
 
 4. **Start the API and web app (two terminals)**
-
 ```bash
 # Terminal 1 - API
 npm run dev --workspace=server
@@ -178,7 +161,6 @@ npm run dev --workspace=apps/web
 ```
 
 5. **Access locally**
-
 - Web app: http://localhost:3000
 - API: http://localhost:3001
 
@@ -200,17 +182,14 @@ After seeding the database, you can login with:
 ### Authentication Endpoints
 
 **POST /api/auth/register**
-
 - Register a new user
 - Body: `{ email, username, password, firstName, lastName, major?, year? }`
 
 **POST /api/auth/login**
-
 - Login user
 - Body: `{ emailOrUsername, password }`
 
 **GET /api/auth/me**
-
 - Get current user info (requires authentication)
 
 ### Student Hub Endpoints
@@ -271,29 +250,25 @@ After seeding the database, you can login with:
 ## WebSocket Events
 
 ### Connection
-
 ```javascript
 const socket = io('http://localhost:3001', {
-  auth: { token: 'your-jwt-token' },
+  auth: { token: 'your-jwt-token' }
 });
 ```
 
 ### Events
 
 **Messaging**
-
 - `message:send` - Send a message
 - `message:receive` - Receive a message
 - `message:typing` - Typing indicator
 
 **Notifications**
-
 - `notification:new` - New notification
 - `notification:read` - Mark notification as read
 - `notification:count` - Get unread count
 
 **Real-time Updates**
-
 - `user:online` - User came online
 - `user:offline` - User went offline
 - `post:update` - New post in feed
@@ -303,19 +278,16 @@ const socket = io('http://localhost:3001', {
 ## Development
 
 ### Running Tests
-
 ```bash
 npm run test
 ```
 
 ### Linting
-
 ```bash
 npm run lint
 ```
 
 ### Formatting
-
 ```bash
 npm run format
 ```
@@ -323,21 +295,18 @@ npm run format
 ### Database Operations
 
 **Create a migration:**
-
 ```bash
 cd server
 npx prisma migrate dev --name migration_name
 ```
 
 **Open Prisma Studio:**
-
 ```bash
 cd server
 npm run prisma:studio
 ```
 
 **Reset database:**
-
 ```bash
 cd server
 npx prisma migrate reset
@@ -348,13 +317,11 @@ npx prisma migrate reset
 ### Production Build
 
 1. **Build all applications:**
-
 ```bash
 npm run build
 ```
 
 2. **Set production environment variables in `.env`:**
-
 ```env
 NODE_ENV=production
 DATABASE_URL=your-production-db-url
@@ -362,14 +329,12 @@ JWT_SECRET=your-secure-secret
 ```
 
 3. **Run migrations:**
-
 ```bash
 cd server
 npx prisma migrate deploy
 ```
 
 4. **Start in production mode:**
-
 ```bash
 npm run start
 ```

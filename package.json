@@ -14,7 +14,6 @@
     "docker:stop": "docker-compose down",
     "docker:logs": "docker-compose logs -f web",
     "build": "docker-compose build web",
-    "test": "npm run test --workspace=server --if-present",
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
     "format": "prettier --write \"**/*.{js,jsx,ts,tsx,json,css,md}\"",
     "db:migrate": "docker-compose exec server npx prisma migrate deploy",

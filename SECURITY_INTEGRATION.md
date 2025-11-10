@@ -63,12 +63,10 @@ app.use(applySecurityHeaders());
 app.use(cookieParser());
 
 // 3. CORS (with credentials support)
-app.use(
-  cors({
-    origin: process.env.ALLOWED_ORIGINS?.split(',') || ['http://localhost:3005'],
-    credentials: true,
-  })
-);
+app.use(cors({
+  origin: process.env.ALLOWED_ORIGINS?.split(',') || ['http://localhost:3005'],
+  credentials: true,
+}));
 
 // 4. Body Parsers
 app.use(express.json());
@@ -361,13 +359,11 @@ export default function Login() {
 ### User Migration
 
 **Option A: Force re-login (Recommended)**
-
 - Users must log in again with new system
 - Cleanest approach
 - Best security posture
 
 **Option B: Gradual migration**
-
 - Keep JWT auth for existing users
 - New registrations use sessions
 - Migrate on next login
@@ -452,13 +448,10 @@ import { cleanupExpiredRateLimits } from './middleware/rateLimiter.js';
 import { cleanupExpiredSessions } from './utils/session.js';
 
 // Run cleanup every hour
-setInterval(
-  async () => {
-    await cleanupExpiredRateLimits();
-    await cleanupExpiredSessions();
-  },
-  60 * 60 * 1000
-);
+setInterval(async () => {
+  await cleanupExpiredRateLimits();
+  await cleanupExpiredSessions();
+}, 60 * 60 * 1000);
 ```
 
 ### Health Checks
@@ -510,7 +503,7 @@ const failedLogins = await prisma.auditLog.findMany({
 
 // Detect brute force patterns
 const ipCounts = {};
-failedLogins.forEach((log) => {
+failedLogins.forEach(log => {
   ipCounts[log.ipAddress] = (ipCounts[log.ipAddress] || 0) + 1;
 });
 
@@ -532,7 +525,6 @@ Object.entries(ipCounts).forEach(([ip, count]) => {
 #### 1. "MAESTROVERSE_PEPPER is not set"
 
 **Solution:**
-
 ```bash
 # Generate and add to .env
 echo "MAESTROVERSE_PEPPER=\"$(openssl rand -base64 64)\"" >> .env
@@ -543,7 +535,6 @@ echo "MAESTROVERSE_PEPPER=\"$(openssl rand -base64 64)\"" >> .env
 **Cause:** Client not sending CSRF token or cookies
 
 **Solution:**
-
 ```javascript
 // Ensure credentials: 'include' in fetch
 fetch('/api/auth-secure/login', {
@@ -559,7 +550,6 @@ fetch('/api/auth-secure/login', {
 **Cause:** Cookie domain mismatch or missing `credentials: 'include'`
 
 **Solution:**
-
 - Check `COOKIE_DOMAIN` in .env
 - Ensure frontend uses `credentials: 'include'`
 - Verify cookies in browser DevTools
@@ -569,7 +559,6 @@ fetch('/api/auth-secure/login', {
 **Cause:** Cleanup cron not running
 
 **Solution:**
-
 ```javascript
 // Manually run cleanup
 await cleanupExpiredRateLimits();
@@ -580,7 +569,6 @@ await cleanupExpiredRateLimits();
 **Cause:** SMTP not configured
 
 **Solution:**
-
 - Check SMTP credentials in .env
 - In development, check console for Ethereal preview URL
 - In production, verify SMTP server connectivity
@@ -628,13 +616,15 @@ test('rate limiting blocks after max attempts', async () => {
 // Test full registration flow
 test('registration flow', async () => {
   // 1. Register
-  const registerRes = await request(app).post('/api/auth-secure/register').send({
-    email: 'newuser@example.com',
-    username: 'newuser',
-    password: 'SecurePassword123!',
-    firstName: 'New',
-    lastName: 'User',
-  });
+  const registerRes = await request(app)
+    .post('/api/auth-secure/register')
+    .send({
+      email: 'newuser@example.com',
+      username: 'newuser',
+      password: 'SecurePassword123!',
+      firstName: 'New',
+      lastName: 'User',
+    });
 
   expect(registerRes.status).toBe(201);
   expect(registerRes.body.user.isVerified).toBe(false);
@@ -652,10 +642,12 @@ test('registration flow', async () => {
   expect(verifyRes.status).toBe(200);
 
   // 4. Login
-  const loginRes = await request(app).post('/api/auth-secure/login').send({
-    emailOrUsername: 'newuser@example.com',
-    password: 'SecurePassword123!',
-  });
+  const loginRes = await request(app)
+    .post('/api/auth-secure/login')
+    .send({
+      emailOrUsername: 'newuser@example.com',
+      password: 'SecurePassword123!',
+    });
 
   expect(loginRes.status).toBe(200);
   expect(loginRes.body.user.isVerified).toBe(true);

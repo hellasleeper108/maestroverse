@@ -76,6 +76,8 @@ function CoursePage({ user, setUser }) {
     setUser(null);
   }
 
+  
+
   return (
     <div className="min-h-screen bg-gray-900">
       <Navbar currentModule="CollabSpace" user={user} onLogout={handleLogout} />
@@ -102,7 +104,9 @@ function CoursePage({ user, setUser }) {
                 <div>
                   <div className="text-teal-400 font-bold mb-1">{course.code}</div>
                   <h1 className="text-3xl font-bold text-white mb-2">{course.name}</h1>
-                  {course.description && <p className="text-gray-400">{course.description}</p>}
+                  {course.description && (
+                    <p className="text-gray-400">{course.description}</p>
+                  )}
                 </div>
                 {!showThreadForm && (
                   <button
@@ -215,7 +219,9 @@ function CoursePage({ user, setUser }) {
                         </span>
                       </div>
 
-                      <p className="text-gray-400 text-sm mb-4 line-clamp-2">{thread.content}</p>
+                      <p className="text-gray-400 text-sm mb-4 line-clamp-2">
+                        {thread.content}
+                      </p>
 
                       <div className="flex items-center justify-between">
                         <div className="flex items-center space-x-3">

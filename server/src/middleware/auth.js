@@ -1,72 +1,75 @@
+import jwt from 'jsonwebtoken';
 import { PrismaClient } from '@prisma/client';
-import { verifyAccessToken, extractTokens } from '../utils/tokens.js';
 
 const prisma = new PrismaClient();
 
 /**
- * Authentication middleware - verifies JWT token from cookies or Authorization header
+ * Authentication middleware - verifies JWT token
  */
 export const authenticate = async (req, res, next) => {
   try {
-    // Extract tokens from cookies or Authorization header
-    const { accessToken } = extractTokens(req);
+    const authHeader = req.headers.authorization;
 
-    if (!accessToken) {
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return res.status(401).json({ error: 'No token provided' });
     }
 
-    // Verify access token
-    const decoded = verifyAccessToken(accessToken);
+    const token = authHeader.substring(7);
 
-    if (!decoded || !decoded.userId) {
-      return res.status(401).json({ error: 'Invalid or expired token' });
-    }
+    try {
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    // Fetch user from database
-    const user = await prisma.user.findUnique({
-      where: { id: decoded.userId },
-      select: {
-        id: true,
-        email: true,
-        username: true,
-        firstName: true,
-        lastName: true,
-        photoUrl: true,
-        role: true,
-        status: true,
-        suspendedUntil: true,
-        moderationNote: true,
-      },
-    });
+      // Fetch user from database
+      const user = await prisma.user.findUnique({
+        where: { id: decoded.userId },
+        select: {
+          id: true,
+          email: true,
+          username: true,
+          firstName: true,
+          lastName: true,
+          photoUrl: true,
+          role: true,
+          status: true,
+          suspendedUntil: true,
+          moderationNote: true,
+        },
+      });
 
-    if (!user) {
-      return res.status(401).json({ error: 'User not found' });
-    }
-
-    // Moderation checks
-    if (user.status === 'BANNED') {
-      return res.status(403).json({ error: 'This account has been permanently banned.' });
-    }
-
-    if (user.status === 'SUSPENDED') {
-      if (user.suspendedUntil && user.suspendedUntil > new Date()) {
-        return res.status(403).json({
-          error: `Account suspended until ${user.suspendedUntil.toISOString()}`,
-        });
+      if (!user) {
+        return res.status(401).json({ error: 'User not found' });
       }
 
-      // Suspension expired – automatically restore the account
-      await prisma.user.update({
-        where: { id: user.id },
-        data: { status: 'ACTIVE', suspendedUntil: null },
-      });
-      user.status = 'ACTIVE';
-      user.suspendedUntil = null;
-    }
+      // Moderation checks
+      if (user.status === 'BANNED') {
+        return res.status(403).json({ error: 'This account has been permanently banned.' });
+      }
 
-    // Attach user to request
-    req.user = user;
-    next();
+      if (user.status === 'SUSPENDED') {
+        if (user.suspendedUntil && user.suspendedUntil > new Date()) {
+          return res.status(403).json({
+            error: `Account suspended until ${user.suspendedUntil.toISOString()}`,
+          });
+        }
+
+        // Suspension expired – automatically restore the account
+        await prisma.user.update({
+          where: { id: user.id },
+          data: { status: 'ACTIVE', suspendedUntil: null },
+        });
+        user.status = 'ACTIVE';
+        user.suspendedUntil = null;
+      }
+
+      // Attach user to request
+      req.user = user;
+      next();
+    } catch (err) {
+      if (err.name === 'TokenExpiredError') {
+        return res.status(401).json({ error: 'Token expired' });
+      }
+      throw err;
+    }
   } catch (error) {
     console.error('Authentication error:', error);
     res.status(401).json({ error: 'Invalid token' });
@@ -78,45 +81,38 @@ export const authenticate = async (req, res, next) => {
  */
 export const optionalAuth = async (req, res, next) => {
   try {
-    // Extract tokens from cookies or Authorization header
-    const { accessToken } = extractTokens(req);
+    const authHeader = req.headers.authorization;
 
-    if (accessToken) {
-      // Verify access token
-      const decoded = verifyAccessToken(accessToken);
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      const token = authHeader.substring(7);
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-      if (decoded && decoded.userId) {
-        const user = await prisma.user.findUnique({
-          where: { id: decoded.userId },
-          select: {
-            id: true,
-            email: true,
-            username: true,
-            firstName: true,
-            lastName: true,
-            photoUrl: true,
-            role: true,
-            status: true,
-            suspendedUntil: true,
-            moderationNote: true,
-          },
-        });
+      const user = await prisma.user.findUnique({
+        where: { id: decoded.userId },
+        select: {
+          id: true,
+          email: true,
+          username: true,
+          firstName: true,
+          lastName: true,
+          photoUrl: true,
+          role: true,
+          status: true,
+          suspendedUntil: true,
+          moderationNote: true,
+        },
+      });
 
-        if (user) {
-          if (user.status === 'BANNED') {
-            return next();
-          }
-
-          if (
-            user.status === 'SUSPENDED' &&
-            user.suspendedUntil &&
-            user.suspendedUntil > new Date()
-          ) {
-            return next();
-          }
-
-          req.user = user;
+      if (user) {
+        if (user.status === 'BANNED') {
+          return next();
         }
+
+        if (user.status === 'SUSPENDED' && user.suspendedUntil && user.suspendedUntil > new Date()) {
+          return next();
+        }
+
+        req.user = user;
       }
     }
   } catch (error) {

@@ -194,9 +194,7 @@ function StudyGroupDetail({ user, setUser }) {
               </button>
               <h1 className="text-3xl font-bold text-white mb-2">{studyGroup.name}</h1>
               {studyGroup.course && (
-                <p className="text-teal-400">
-                  {studyGroup.course.code} - {studyGroup.course.name}
-                </p>
+                <p className="text-teal-400">{studyGroup.course.code} - {studyGroup.course.name}</p>
               )}
             </div>
 
@@ -220,13 +218,13 @@ function StudyGroupDetail({ user, setUser }) {
           </div>
 
           {/* Description */}
-          {studyGroup.description && <p className="text-gray-300 mb-4">{studyGroup.description}</p>}
+          {studyGroup.description && (
+            <p className="text-gray-300 mb-4">{studyGroup.description}</p>
+          )}
 
           {/* Stats */}
           <div className="flex items-center space-x-6 text-sm text-gray-400">
-            <span>
-              👥 {studyGroup._count.members}/{studyGroup.maxMembers} members
-            </span>
+            <span>👥 {studyGroup._count.members}/{studyGroup.maxMembers} members</span>
             <span>💬 {studyGroup._count.messages} messages</span>
             {studyGroup.cohort && <span>📊 Level: {studyGroup.cohort}</span>}
           </div>
@@ -292,9 +290,7 @@ function StudyGroupDetail({ user, setUser }) {
           <div className="bg-gray-800 rounded-lg p-12 text-center border border-gray-700">
             <div className="text-6xl mb-4">🔒</div>
             <h3 className="text-white text-xl font-semibold mb-2">Members Only</h3>
-            <p className="text-gray-400 mb-6">
-              Join this study group to access chat and member features
-            </p>
+            <p className="text-gray-400 mb-6">Join this study group to access chat and member features</p>
           </div>
         ) : activeTab === 'chat' ? (
           <div className="bg-gray-800 rounded-lg border border-gray-700 overflow-hidden">
@@ -411,7 +407,10 @@ function StudyGroupDetail({ user, setUser }) {
         ) : activeTab === 'members' ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {studyGroup.members.map((member) => (
-              <div key={member.id} className="bg-gray-800 rounded-lg p-4 border border-gray-700">
+              <div
+                key={member.id}
+                className="bg-gray-800 rounded-lg p-4 border border-gray-700"
+              >
                 <div className="flex items-center space-x-3">
                   <Link href={`/hub/users/${member.user.id}`}>
                     <div className="w-12 h-12 bg-gradient-to-br from-green-600 to-emerald-700 rounded-full flex items-center justify-center text-white font-semibold text-lg cursor-pointer hover:opacity-80 transition-opacity">
@@ -451,7 +450,9 @@ function StudyGroupDetail({ user, setUser }) {
                 <p className="text-gray-400">No meeting time set</p>
               )}
               {studyGroup.meetingDays && studyGroup.meetingDays.length > 0 && (
-                <p className="text-gray-300 mt-1">📅 {studyGroup.meetingDays.join(', ')}</p>
+                <p className="text-gray-300 mt-1">
+                  📅 {studyGroup.meetingDays.join(', ')}
+                </p>
               )}
             </div>
 
@@ -485,9 +486,7 @@ function StudyGroupDetail({ user, setUser }) {
 
             <div>
               <h3 className="text-white font-semibold mb-2">Group Details</h3>
-              <p className="text-gray-300">
-                Created on {new Date(studyGroup.createdAt).toLocaleDateString()}
-              </p>
+              <p className="text-gray-300">Created on {new Date(studyGroup.createdAt).toLocaleDateString()}</p>
               <p className="text-gray-300">Privacy: {studyGroup.isPublic ? 'Public' : 'Private'}</p>
             </div>
           </div>

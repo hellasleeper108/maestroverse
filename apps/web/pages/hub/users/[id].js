@@ -88,8 +88,7 @@ function UserProfile({ user: currentUser, setUser }) {
           <div className="flex items-start space-x-6">
             {/* Avatar */}
             <div className="w-24 h-24 bg-gradient-to-br from-teal-600 to-cyan-700 rounded-full flex items-center justify-center text-white font-bold text-4xl flex-shrink-0">
-              {profile.firstName[0]}
-              {profile.lastName[0]}
+              {profile.firstName[0]}{profile.lastName[0]}
             </div>
 
             {/* Profile Info */}
@@ -100,7 +99,9 @@ function UserProfile({ user: currentUser, setUser }) {
               <p className="text-gray-400 mb-4">@{profile.username}</p>
 
               {/* Bio */}
-              {profile.bio && <p className="text-gray-300 mb-4 leading-relaxed">{profile.bio}</p>}
+              {profile.bio && (
+                <p className="text-gray-300 mb-4 leading-relaxed">{profile.bio}</p>
+              )}
 
               {/* Stats */}
               <div className="flex items-center space-x-6 text-sm">

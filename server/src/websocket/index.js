@@ -256,11 +256,11 @@ export function initializeWebSocket(io) {
             roomId_userId: {
               roomId,
               userId: socket.user.id,
-            },
+            }
           },
           include: {
             room: true,
-          },
+          }
         });
 
         if (!membership) {
@@ -289,15 +289,15 @@ export function initializeWebSocket(io) {
                 lastName: true,
                 username: true,
                 photoUrl: true,
-              },
-            },
-          },
+              }
+            }
+          }
         });
 
         // Send user list to the joining user
         socket.emit('chatroom:userlist', {
           roomId,
-          users: roomMembers.map((m) => ({
+          users: roomMembers.map(m => ({
             ...m.user,
             role: m.role,
             isOnline: activeUsers.has(m.userId),
@@ -349,8 +349,8 @@ export function initializeWebSocket(io) {
             roomId_userId: {
               roomId,
               userId: socket.user.id,
-            },
-          },
+            }
+          }
         });
 
         if (!membership) {
@@ -380,13 +380,14 @@ export function initializeWebSocket(io) {
                 lastName: true,
                 username: true,
                 photoUrl: true,
-              },
-            },
-          },
+              }
+            }
+          }
         });
 
         // Broadcast message to all users in the room
         io.to(`chatroom:${roomId}`).emit('chatroom:message', message);
+
       } catch (error) {
         console.error('Chatroom message error:', error);
         socket.emit('error', { message: 'Failed to send message' });
@@ -423,11 +424,11 @@ export function initializeWebSocket(io) {
             room: {
               include: {
                 members: {
-                  where: { userId: socket.user.id },
-                },
-              },
-            },
-          },
+                  where: { userId: socket.user.id }
+                }
+              }
+            }
+          }
         });
 
         if (!message) {
@@ -437,7 +438,7 @@ export function initializeWebSocket(io) {
 
         // Check permissions (author, room admin, or site admin)
         const isAuthor = message.authorId === socket.user.id;
-        const isRoomAdmin = message.room.members.some((m) => m.role === 'ADMIN');
+        const isRoomAdmin = message.room.members.some(m => m.role === 'ADMIN');
         const isSiteAdmin = socket.user.role === 'ADMIN';
 
         if (!isAuthor && !isRoomAdmin && !isSiteAdmin) {
@@ -447,7 +448,7 @@ export function initializeWebSocket(io) {
 
         // Delete message
         await prisma.chatMessage.delete({
-          where: { id: messageId },
+          where: { id: messageId }
         });
 
         // Notify room that message was deleted
@@ -455,6 +456,7 @@ export function initializeWebSocket(io) {
           roomId,
           messageId,
         });
+
       } catch (error) {
         console.error('Delete message error:', error);
         socket.emit('error', { message: 'Failed to delete message' });
@@ -477,12 +479,10 @@ export function initializeWebSocket(io) {
       });
 
       // Update last active timestamp
-      prisma.user
-        .update({
-          where: { id: socket.user.id },
-          data: { lastActive: new Date() },
-        })
-        .catch(console.error);
+      prisma.user.update({
+        where: { id: socket.user.id },
+        data: { lastActive: new Date() },
+      }).catch(console.error);
     });
   });
 

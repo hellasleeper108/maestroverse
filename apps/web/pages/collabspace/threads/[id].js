@@ -100,8 +100,7 @@ function ThreadPage({ user, setUser }) {
   }
 
   async function handleDeleteThread() {
-    if (!confirm('Are you sure you want to delete this thread? This will also delete all replies.'))
-      return;
+    if (!confirm('Are you sure you want to delete this thread? This will also delete all replies.')) return;
 
     setError(null);
 
@@ -118,6 +117,8 @@ function ThreadPage({ user, setUser }) {
     auth.logout();
     setUser(null);
   }
+
+  
 
   return (
     <div className="min-h-screen bg-gray-900">
@@ -185,7 +186,9 @@ function ThreadPage({ user, setUser }) {
                 </div>
               </div>
 
-              <p className="text-gray-300 leading-relaxed whitespace-pre-wrap">{thread.content}</p>
+              <p className="text-gray-300 leading-relaxed whitespace-pre-wrap">
+                {thread.content}
+              </p>
             </div>
 
             {/* Reply Form */}

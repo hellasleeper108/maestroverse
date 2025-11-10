@@ -1,9 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
 import PropTypes from 'prop-types';
 import { auth } from '../lib/api';
-import OAuthButtons from '../components/OAuthButtons';
 
 function Login({ setUser }) {
   const [emailOrUsername, setEmailOrUsername] = useState('');
@@ -11,41 +10,6 @@ function Login({ setUser }) {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const router = useRouter();
-
-  // Handle OAuth callback
-  useEffect(() => {
-    const handleOAuthCallback = async () => {
-      const { auth: authStatus, error: authError, token } = router.query;
-
-      if (authStatus === 'success' && token) {
-        try {
-          // Token is already set in cookies by backend
-          // Fetch user data
-          const data = await auth.me();
-          setUser(data.user);
-          // Clean URL and redirect
-          router.replace('/hub');
-        } catch (err) {
-          console.error('[OAuth] Failed to fetch user:', err);
-          setError('Authentication successful, but failed to fetch user data');
-        }
-      } else if (authError) {
-        const errorMessages = {
-          google_auth_failed: 'Google authentication failed',
-          github_auth_failed: 'GitHub authentication failed',
-          authentication_failed: 'Authentication failed',
-          account_banned: 'Your account has been banned',
-          account_suspended: 'Your account is suspended',
-          authentication_error: 'An error occurred during authentication',
-        };
-        setError(errorMessages[authError] || 'Authentication failed');
-        // Clean URL
-        router.replace('/login', undefined, { shallow: true });
-      }
-    };
-
-    handleOAuthCallback();
-  }, [router, router.query, setUser]);
 
   async function handleLogin(e) {
     e.preventDefault();
@@ -117,10 +81,6 @@ function Login({ setUser }) {
               {loading ? 'Logging in...' : 'Login'}
             </button>
           </form>
-
-          <div className="mt-6">
-            <OAuthButtons />
-          </div>
 
           <div className="mt-6 text-center">
             <p className="text-gray-400">

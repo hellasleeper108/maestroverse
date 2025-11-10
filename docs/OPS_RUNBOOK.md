@@ -24,7 +24,7 @@ Playbooks and configuration snippets for production hardening tasks.
          - name: NODE_ENV
            value: production
          - name: CORS_ORIGINS
-           value: 'https://app.maestroverse.edu,https://admin.maestroverse.edu'
+           value: "https://app.maestroverse.edu,https://admin.maestroverse.edu"
    ```
 3. **Apply deployment**:
    ```bash
@@ -140,7 +140,6 @@ http {
 ```
 
 **Checklist:**
-
 - Log blocked requests (`limit_req_status 429;` plus access/error logs).
 - Ensure ingress forwards real client IP (so Express rate limiting and audit logs are accurate).
 - Mirror limits into CDN/WAF if applicable (e.g., Cloudflare Rate Limiting rules).
@@ -152,7 +151,6 @@ http {
 ### Cron + pg_dump (self-hosted)
 
 Create `/usr/local/bin/maestroverse_backup.sh`:
-
 ```bash
 #!/usr/bin/env bash
 set -euo pipefail
@@ -169,13 +167,11 @@ find /backups -name 'maestroverse-*.dump' -mtime +30 -delete
 ```
 
 Cron entry (`crontab -e`):
-
 ```
 0 2 * * * /usr/local/bin/maestroverse_backup.sh >> /var/log/maestroverse-backup.log 2>&1
 ```
 
 **Managed DB Alternative:**
-
 - Enable automated snapshots and PITR in RDS/Aurora/Cloud SQL.
 - Configure snapshot retention ≥30 days and copy to a secondary region if required.
 
@@ -200,7 +196,6 @@ Cron entry (`crontab -e`):
 ### Log & Error Aggregation
 
 **Datadog example:**
-
 ```yaml
 logs:
   - type: file
@@ -210,7 +205,6 @@ logs:
 ```
 
 Alert query:
-
 ```
 avg(last_5m):sum:maestroverse.api.errors{service:maestroverse-api} > 5
 ```
@@ -237,3 +231,4 @@ avg(last_5m):sum:maestroverse.api.errors{service:maestroverse-api} > 5
 - [ ] Edge rate limiting confirms 429 on synthetic flood test.
 - [ ] Nightly backups running; latest artefact restored successfully.
 - [ ] Uptime checks and error alerts visible in monitoring tool.
+

@@ -39,7 +39,6 @@ db/*.db
 
 # Uploads
 uploads/
-private-uploads/
 *.upload
 
 # Docker

@@ -12,28 +12,11 @@
 
 import express from 'express';
 import { PrismaClient } from '@prisma/client';
-import {
-  hashPassword,
-  verifyPassword,
-  validatePassword,
-  generateSecureToken,
-} from '../utils/password.js';
+import { hashPassword, verifyPassword, validatePassword, generateSecureToken } from '../utils/password.js';
 import { sendVerificationEmail, sendPasswordResetEmail } from '../utils/email.js';
 import { logAudit, AUDIT_ACTIONS } from '../utils/audit.js';
-import {
-  registerRateLimiter,
-  loginRateLimiter,
-  passwordResetRateLimiter,
-  emailVerificationRateLimiter,
-  clearRateLimit,
-} from '../middleware/rateLimiter.js';
-import {
-  regenerateSession,
-  destroySession,
-  requireAuth,
-  attachUser,
-  sessionFingerprint,
-} from '../utils/session.js';
+import { registerRateLimiter, loginRateLimiter, passwordResetRateLimiter, emailVerificationRateLimiter, clearRateLimit } from '../middleware/rateLimiter.js';
+import { regenerateSession, destroySession, requireAuth, attachUser, sessionFingerprint } from '../utils/session.js';
 import { getCsrfToken } from '../utils/csrf.js';
 
 const router = express.Router();
@@ -50,7 +33,16 @@ const rootAdminEmails = (process.env.ROOT_ADMIN_EMAILS || '')
  */
 router.post('/register', registerRateLimiter, async (req, res) => {
   try {
-    const { email, username, password, firstName, lastName, major, year, cohort } = req.body;
+    const {
+      email,
+      username,
+      password,
+      firstName,
+      lastName,
+      major,
+      year,
+      cohort,
+    } = req.body;
 
     // Validation
     if (!email || !username || !password || !firstName || !lastName) {
@@ -194,6 +186,7 @@ router.post('/register', registerRateLimiter, async (req, res) => {
       },
       emailSent: emailResult.success,
     });
+
   } catch (error) {
     console.error('[AUTH] Registration error:', error);
 
@@ -237,7 +230,10 @@ router.post('/login', loginRateLimiter, async (req, res) => {
     // Find user by email or username
     const user = await prisma.user.findFirst({
       where: {
-        OR: [{ email: emailOrUsername.toLowerCase() }, { username: emailOrUsername.toLowerCase() }],
+        OR: [
+          { email: emailOrUsername.toLowerCase() },
+          { username: emailOrUsername.toLowerCase() },
+        ],
       },
     });
 
@@ -396,6 +392,7 @@ router.post('/login', loginRateLimiter, async (req, res) => {
       },
       csrfToken,
     });
+
   } catch (error) {
     console.error('[AUTH] Login error:', error);
 
@@ -423,13 +420,11 @@ router.post('/logout', requireAuth, async (req, res) => {
     const sessionId = req.session.id;
 
     // Delete session from database
-    await prisma.session
-      .delete({
-        where: { sid: sessionId },
-      })
-      .catch(() => {
-        // Ignore if session doesn't exist
-      });
+    await prisma.session.delete({
+      where: { sid: sessionId },
+    }).catch(() => {
+      // Ignore if session doesn't exist
+    });
 
     // Log logout
     await logAudit({
@@ -443,6 +438,7 @@ router.post('/logout', requireAuth, async (req, res) => {
     await destroySession(req);
 
     res.json({ message: 'Logout successful' });
+
   } catch (error) {
     console.error('[AUTH] Logout error:', error);
 
@@ -539,6 +535,7 @@ router.post('/verify-email', emailVerificationRateLimiter, async (req, res) => {
     });
 
     res.json({ message: 'Email verified successfully' });
+
   } catch (error) {
     console.error('[AUTH] Email verification error:', error);
     res.status(500).json({ error: 'Email verification failed' });
@@ -602,6 +599,7 @@ router.post('/resend-verification', emailVerificationRateLimiter, requireAuth, a
     });
 
     res.json({ message: 'Verification email sent' });
+
   } catch (error) {
     console.error('[AUTH] Resend verification error:', error);
     res.status(500).json({ error: 'Failed to resend verification email' });
@@ -678,6 +676,7 @@ router.post('/request-password-reset', passwordResetRateLimiter, async (req, res
     res.json({
       message: 'If an account exists with this email, a password reset link has been sent.',
     });
+
   } catch (error) {
     console.error('[AUTH] Password reset request error:', error);
     res.status(500).json({ error: 'Failed to process password reset request' });
@@ -762,6 +761,7 @@ router.post('/reset-password', async (req, res) => {
     });
 
     res.json({ message: 'Password reset successful. Please log in with your new password.' });
+
   } catch (error) {
     console.error('[AUTH] Password reset error:', error);
 

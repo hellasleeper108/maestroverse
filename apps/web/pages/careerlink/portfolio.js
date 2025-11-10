@@ -41,14 +41,12 @@ function Portfolio({ user, setUser }) {
         setFormData({
           headline: data.portfolio.headline || '',
           summary: data.portfolio.summary || '',
-          experience:
-            Array.isArray(data.portfolio.experience) && data.portfolio.experience.length > 0
-              ? data.portfolio.experience[0]?.description || ''
-              : '',
-          education:
-            Array.isArray(data.portfolio.education) && data.portfolio.education.length > 0
-              ? data.portfolio.education[0]?.description || ''
-              : '',
+          experience: Array.isArray(data.portfolio.experience) && data.portfolio.experience.length > 0
+            ? data.portfolio.experience[0]?.description || ''
+            : '',
+          education: Array.isArray(data.portfolio.education) && data.portfolio.education.length > 0
+            ? data.portfolio.education[0]?.description || ''
+            : '',
           resumeUrl: data.portfolio.resumeUrl || '',
           linkedin: data.portfolio.linkedin || '',
           github: data.portfolio.github || '',
@@ -100,6 +98,8 @@ function Portfolio({ user, setUser }) {
     setUser(null);
     router.push('/login');
   }
+
+
 
   return (
     <div className="min-h-screen bg-gray-900">
@@ -285,36 +285,32 @@ function Portfolio({ user, setUser }) {
             </div>
 
             {/* Experience */}
-            {portfolio.experience &&
-              Array.isArray(portfolio.experience) &&
-              portfolio.experience.length > 0 && (
-                <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
-                  <h2 className="text-xl font-semibold text-white mb-4">Experience</h2>
-                  <div className="space-y-3">
-                    {portfolio.experience.map((exp, i) => (
-                      <p key={i} className="text-gray-300 whitespace-pre-wrap leading-relaxed">
-                        {exp.description || JSON.stringify(exp)}
-                      </p>
-                    ))}
-                  </div>
+            {portfolio.experience && Array.isArray(portfolio.experience) && portfolio.experience.length > 0 && (
+              <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
+                <h2 className="text-xl font-semibold text-white mb-4">Experience</h2>
+                <div className="space-y-3">
+                  {portfolio.experience.map((exp, i) => (
+                    <p key={i} className="text-gray-300 whitespace-pre-wrap leading-relaxed">
+                      {exp.description || JSON.stringify(exp)}
+                    </p>
+                  ))}
                 </div>
-              )}
+              </div>
+            )}
 
             {/* Education */}
-            {portfolio.education &&
-              Array.isArray(portfolio.education) &&
-              portfolio.education.length > 0 && (
-                <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
-                  <h2 className="text-xl font-semibold text-white mb-4">Education</h2>
-                  <div className="space-y-3">
-                    {portfolio.education.map((edu, i) => (
-                      <p key={i} className="text-gray-300 whitespace-pre-wrap leading-relaxed">
-                        {edu.description || JSON.stringify(edu)}
-                      </p>
-                    ))}
-                  </div>
+            {portfolio.education && Array.isArray(portfolio.education) && portfolio.education.length > 0 && (
+              <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
+                <h2 className="text-xl font-semibold text-white mb-4">Education</h2>
+                <div className="space-y-3">
+                  {portfolio.education.map((edu, i) => (
+                    <p key={i} className="text-gray-300 whitespace-pre-wrap leading-relaxed">
+                      {edu.description || JSON.stringify(edu)}
+                    </p>
+                  ))}
                 </div>
-              )}
+              </div>
+            )}
 
             {/* Links */}
             {(portfolio.resumeUrl ||
