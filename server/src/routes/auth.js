@@ -2,6 +2,7 @@ import express from 'express';
 import bcrypt from 'bcryptjs';
 import { PrismaClient } from '@prisma/client';
 import { z } from 'zod';
+import passport from '../config/passport.js';
 import { authenticate } from '../middleware/auth.js';
 import {
   generateAccessToken,
@@ -363,6 +364,200 @@ router.post('/logout-all', authenticate, async (req, res) => {
   } catch (error) {
     console.error('Logout all error:', error);
     res.status(500).json({ error: 'Failed to logout from all devices' });
+  }
+});
+
+/**
+ * GET /api/auth/google
+ * Initiate Google OAuth flow
+ */
+router.get('/google', passport.authenticate('google', { session: false }));
+
+/**
+ * GET /api/auth/google/callback
+ * Google OAuth callback
+ */
+router.get(
+  '/google/callback',
+  passport.authenticate('google', { session: false, failureRedirect: '/login?error=google_auth_failed' }),
+  async (req, res) => {
+    try {
+      const user = req.user;
+
+      if (!user) {
+        return res.redirect('/login?error=authentication_failed');
+      }
+
+      // Check user status
+      if (user.status === 'BANNED') {
+        return res.redirect('/login?error=account_banned');
+      }
+
+      if (user.status === 'SUSPENDED') {
+        if (user.suspendedUntil && user.suspendedUntil > new Date()) {
+          return res.redirect(`/login?error=account_suspended&until=${user.suspendedUntil.toISOString()}`);
+        }
+
+        // Restore expired suspension
+        await prisma.user.update({
+          where: { id: user.id },
+          data: { status: 'ACTIVE', suspendedUntil: null },
+        });
+      }
+
+      // Generate tokens
+      const accessToken = generateAccessToken(user.id);
+      const refreshToken = await generateRefreshToken(
+        user.id,
+        req.ip,
+        req.headers['user-agent']
+      );
+
+      // Set cookies
+      setTokenCookies(res, accessToken, refreshToken);
+
+      // Redirect to frontend with success
+      const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3005';
+      res.redirect(`${frontendUrl}/?auth=success&token=${accessToken}`);
+    } catch (error) {
+      console.error('Google OAuth callback error:', error);
+      res.redirect('/login?error=authentication_error');
+    }
+  }
+);
+
+/**
+ * GET /api/auth/github
+ * Initiate GitHub OAuth flow
+ */
+router.get('/github', passport.authenticate('github', { session: false }));
+
+/**
+ * GET /api/auth/github/callback
+ * GitHub OAuth callback
+ */
+router.get(
+  '/github/callback',
+  passport.authenticate('github', { session: false, failureRedirect: '/login?error=github_auth_failed' }),
+  async (req, res) => {
+    try {
+      const user = req.user;
+
+      if (!user) {
+        return res.redirect('/login?error=authentication_failed');
+      }
+
+      // Check user status
+      if (user.status === 'BANNED') {
+        return res.redirect('/login?error=account_banned');
+      }
+
+      if (user.status === 'SUSPENDED') {
+        if (user.suspendedUntil && user.suspendedUntil > new Date()) {
+          return res.redirect(`/login?error=account_suspended&until=${user.suspendedUntil.toISOString()}`);
+        }
+
+        // Restore expired suspension
+        await prisma.user.update({
+          where: { id: user.id },
+          data: { status: 'ACTIVE', suspendedUntil: null },
+        });
+      }
+
+      // Generate tokens
+      const accessToken = generateAccessToken(user.id);
+      const refreshToken = await generateRefreshToken(
+        user.id,
+        req.ip,
+        req.headers['user-agent']
+      );
+
+      // Set cookies
+      setTokenCookies(res, accessToken, refreshToken);
+
+      // Redirect to frontend with success
+      const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3005';
+      res.redirect(`${frontendUrl}/?auth=success&token=${accessToken}`);
+    } catch (error) {
+      console.error('GitHub OAuth callback error:', error);
+      res.redirect('/login?error=authentication_error');
+    }
+  }
+);
+
+/**
+ * GET /api/auth/oauth/accounts
+ * Get user's linked OAuth accounts (requires authentication)
+ */
+router.get('/oauth/accounts', authenticate, async (req, res) => {
+  try {
+    const accounts = await prisma.oAuthAccount.findMany({
+      where: { userId: req.user.id },
+      select: {
+        id: true,
+        provider: true,
+        email: true,
+        displayName: true,
+        profileUrl: true,
+        createdAt: true,
+      },
+    });
+
+    res.json({ accounts });
+  } catch (error) {
+    console.error('Get OAuth accounts error:', error);
+    res.status(500).json({ error: 'Failed to fetch OAuth accounts' });
+  }
+});
+
+/**
+ * DELETE /api/auth/oauth/accounts/:accountId
+ * Unlink an OAuth account (requires authentication)
+ */
+router.delete('/oauth/accounts/:accountId', authenticate, async (req, res) => {
+  try {
+    const { accountId } = req.params;
+    const userId = req.user.id;
+
+    // Check if account exists and belongs to user
+    const account = await prisma.oAuthAccount.findFirst({
+      where: {
+        id: accountId,
+        userId,
+      },
+    });
+
+    if (!account) {
+      return res.status(404).json({ error: 'OAuth account not found' });
+    }
+
+    // Check if user has a password (prevent locking out OAuth-only users)
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { password: true },
+    });
+
+    // Check if user has other login methods
+    const accountCount = await prisma.oAuthAccount.count({
+      where: { userId },
+    });
+
+    // Prevent unlinking if this is the only auth method and no password is set
+    if (accountCount === 1 && !user.password) {
+      return res.status(400).json({
+        error: 'Cannot unlink the only authentication method. Please set a password first.',
+      });
+    }
+
+    // Delete OAuth account
+    await prisma.oAuthAccount.delete({
+      where: { id: accountId },
+    });
+
+    res.json({ message: 'OAuth account unlinked successfully' });
+  } catch (error) {
+    console.error('Unlink OAuth account error:', error);
+    res.status(500).json({ error: 'Failed to unlink OAuth account' });
   }
 });
 

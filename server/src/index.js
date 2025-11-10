@@ -21,6 +21,10 @@ import adminRoutes from './routes/admin.js';
 import mimRoutes from './routes/mim.js';
 import { apiRateLimiter } from './middleware/rateLimiter.js';
 
+// OAuth configuration
+import passport from './config/passport.js';
+import { initializePassport } from './config/passport.js';
+
 // WebSocket handler
 import { initializeWebSocket } from './websocket/index.js';
 
@@ -100,6 +104,7 @@ if (isProd) {
 app.use(express.json({ limit: '1mb' }));
 app.use(express.urlencoded({ extended: true, limit: '1mb' }));
 app.use(cookieParser());
+app.use(passport.initialize());
 app.use(fileUpload({
   limits: { fileSize: parseInt(process.env.MAX_FILE_SIZE) || 10 * 1024 * 1024 },
   abortOnLimit: true,
@@ -140,6 +145,9 @@ app.use((err, req, res, _next) => {
     ...(process.env.NODE_ENV === 'development' && { stack: err.stack }),
   });
 });
+
+// Initialize Passport.js OAuth
+initializePassport();
 
 // Initialize WebSocket
 initializeWebSocket(io);
