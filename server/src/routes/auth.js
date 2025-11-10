@@ -20,6 +20,8 @@ import {
   generateDeviceId,
 } from '../utils/tokens.js';
 import { loginRateLimiter, registerRateLimiter } from '../middleware/rateLimiter.js';
+import { generateCSRFToken } from '../utils/csrf.js';
+import { csrfProtection } from '../middleware/csrfProtection.js';
 
 const router = express.Router();
 const prisma = new PrismaClient();
@@ -259,6 +261,32 @@ router.get('/me', authenticate, async (req, res) => {
 });
 
 /**
+ * GET /api/auth/csrf
+ * Get CSRF token for current session (requires authentication)
+ *
+ * This endpoint issues a signed CSRF token tied to the user's session.
+ * The token must be included in the X-CSRF-Token header for all unsafe
+ * HTTP methods (POST, PUT, PATCH, DELETE) when using cookie-based auth.
+ */
+router.get('/csrf', authenticate, async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    // Generate CSRF token tied to user session
+    const csrfToken = generateCSRFToken(userId);
+
+    res.json({
+      csrfToken,
+      expiresIn: '1h',
+      usage: 'Include in X-CSRF-Token header for POST/PUT/PATCH/DELETE requests',
+    });
+  } catch (error) {
+    console.error('CSRF token generation error:', error);
+    res.status(500).json({ error: 'Failed to generate CSRF token' });
+  }
+});
+
+/**
  * POST /api/auth/refresh
  * Refresh access token using refresh token (automatic token rotation)
  */
@@ -318,7 +346,7 @@ router.post('/refresh', async (req, res) => {
  * POST /api/auth/logout
  * Logout user and revoke refresh token
  */
-router.post('/logout', async (req, res) => {
+router.post('/logout', csrfProtection, async (req, res) => {
   try {
     // Extract refresh token
     const { refreshToken: refreshTokenFromCookie } = extractTokens(req);
@@ -344,7 +372,7 @@ router.post('/logout', async (req, res) => {
  * POST /api/auth/logout-all
  * Logout user from all devices by revoking all refresh tokens
  */
-router.post('/logout-all', authenticate, async (req, res) => {
+router.post('/logout-all', csrfProtection, authenticate, async (req, res) => {
   try {
     const userId = req.user.id;
 
@@ -367,7 +395,7 @@ router.post('/logout-all', authenticate, async (req, res) => {
  * POST /api/auth/logout-device
  * Logout from a specific device by revoking that device's tokens
  */
-router.post('/logout-device', authenticate, async (req, res) => {
+router.post('/logout-device', csrfProtection, authenticate, async (req, res) => {
   try {
     const userId = req.user.id;
     const { deviceId } = req.body;
