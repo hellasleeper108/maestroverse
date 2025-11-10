@@ -405,17 +405,182 @@ async function main() {
 
   console.log(`✓ Created ${chatRooms.length} chat rooms with demo messages\n`);
 
+  // Create comments on posts
+  console.log('Creating comments on posts...');
+  const comments = await Promise.all([
+    prisma.comment.create({
+      data: {
+        content: 'Awesome work! Would love to see a demo 👏',
+        postId: posts[0].id,
+        authorId: users[1].id,
+      },
+    }),
+    prisma.comment.create({
+      data: {
+        content: 'Congrats! What tech stack did you use?',
+        postId: posts[0].id,
+        authorId: users[2].id,
+      },
+    }),
+    prisma.comment.create({
+      data: {
+        content: "I'm interested! Let's study together.",
+        postId: posts[1].id,
+        authorId: users[0].id,
+      },
+    }),
+    prisma.comment.create({
+      data: {
+        content: 'Love the color palette! Great work 🎨',
+        postId: posts[2].id,
+        authorId: users[1].id,
+      },
+    }),
+  ]);
+
+  console.log(`✓ Created ${comments.length} comments\n`);
+
+  // Create likes on posts
+  console.log('Creating likes on posts...');
+  const likes = await Promise.all([
+    prisma.like.create({
+      data: {
+        postId: posts[0].id,
+        userId: users[1].id,
+      },
+    }),
+    prisma.like.create({
+      data: {
+        postId: posts[0].id,
+        userId: users[2].id,
+      },
+    }),
+    prisma.like.create({
+      data: {
+        postId: posts[1].id,
+        userId: users[0].id,
+      },
+    }),
+    prisma.like.create({
+      data: {
+        postId: posts[1].id,
+        userId: users[2].id,
+      },
+    }),
+    prisma.like.create({
+      data: {
+        postId: posts[2].id,
+        userId: users[0].id,
+      },
+    }),
+  ]);
+
+  console.log(`✓ Created ${likes.length} likes\n`);
+
+  // Create professional connections
+  console.log('Creating professional connections...');
+  const connections = await Promise.all([
+    prisma.connection.create({
+      data: {
+        senderId: users[3].id, // Alice
+        receiverId: users[4].id, // Bob
+        status: 'ACCEPTED',
+      },
+    }),
+    prisma.connection.create({
+      data: {
+        senderId: users[3].id, // Alice
+        receiverId: users[5].id, // Carol
+        status: 'ACCEPTED',
+      },
+    }),
+    prisma.connection.create({
+      data: {
+        senderId: users[4].id, // Bob
+        receiverId: users[5].id, // Carol
+        status: 'PENDING',
+      },
+    }),
+  ]);
+
+  console.log(`✓ Created ${connections.length} connections\n`);
+
+  // Create thread replies
+  console.log('Creating thread replies...');
+  const threadReplies = await Promise.all([
+    prisma.threadReply.create({
+      data: {
+        content:
+          'I recommend the official React docs and FreeCodeCamp. Both are excellent!',
+        threadId: threads[0].id,
+        authorId: users[1].id,
+      },
+    }),
+    prisma.threadReply.create({
+      data: {
+        content: "Don't forget to check out React Beta docs - they're really well written!",
+        threadId: threads[0].id,
+        authorId: users[2].id,
+      },
+    }),
+    prisma.threadReply.create({
+      data: {
+        content: 'Focus on understanding Big O notation and practice with LeetCode problems!',
+        threadId: threads[1].id,
+        authorId: users[0].id,
+      },
+    }),
+  ]);
+
+  console.log(`✓ Created ${threadReplies.length} thread replies\n`);
+
+  // Create notifications
+  console.log('Creating notifications...');
+  const notifications = await Promise.all([
+    prisma.notification.create({
+      data: {
+        userId: users[3].id, // Alice
+        type: 'LIKE',
+        content: 'Bob liked your post',
+        isRead: false,
+      },
+    }),
+    prisma.notification.create({
+      data: {
+        userId: users[3].id, // Alice
+        type: 'COMMENT',
+        content: 'Bob commented on your post',
+        isRead: false,
+      },
+    }),
+    prisma.notification.create({
+      data: {
+        userId: users[4].id, // Bob
+        type: 'CONNECTION',
+        content: 'Alice accepted your connection request',
+        isRead: true,
+      },
+    }),
+  ]);
+
+  console.log(`✓ Created ${notifications.length} notifications\n`);
+
   console.log('✅ Database seeded successfully!');
   console.log('\n📊 Summary:');
   console.log(`   - Users: ${users.length}`);
   console.log(`   - Courses: ${courses.length}`);
   console.log(`   - Groups: ${groups.length}`);
   console.log(`   - Posts: ${posts.length}`);
+  console.log(`   - Comments: ${comments.length}`);
+  console.log(`   - Likes: ${likes.length}`);
   console.log(`   - Projects: ${projects.length}`);
+  console.log(`   - Connections: ${connections.length}`);
   console.log(`   - Threads: ${threads.length}`);
+  console.log(`   - Thread Replies: ${threadReplies.length}`);
   console.log(`   - Study Groups: ${studyGroups.length}`);
   console.log(`   - Events: ${events.length}`);
   console.log(`   - Chat Rooms: ${chatRooms.length}`);
+  console.log(`   - Notifications: ${notifications.length}`);
   console.log('\n🔐 Demo credentials:');
   console.log('   Email: alice@maestro.edu / bob@maestro.edu / carol@maestro.edu');
   console.log('   Password: password123\n');
