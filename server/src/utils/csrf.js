@@ -15,10 +15,7 @@ if (!CSRF_SECRET) {
 }
 
 // Initialize CSRF protection
-const {
-  generateToken,
-  doubleCsrfProtection,
-} = doubleCsrf({
+const { generateToken, doubleCsrfProtection } = doubleCsrf({
   getSecret: () => CSRF_SECRET,
   cookieName: '__Host-mv.csrf',
   cookieOptions: {

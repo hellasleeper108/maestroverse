@@ -409,7 +409,7 @@ router.get('/posts/:id/comments', authenticate, async (req, res) => {
     const comments = await prisma.comment.findMany({
       where: {
         postId: req.params.id,
-        parentId: null // Only top-level comments
+        parentId: null, // Only top-level comments
       },
       orderBy: { createdAt: 'asc' },
       include: {
@@ -637,10 +637,7 @@ router.get('/messages', authenticate, async (req, res) => {
   try {
     const messages = await prisma.message.findMany({
       where: {
-        OR: [
-          { senderId: req.user.id },
-          { receiverId: req.user.id },
-        ],
+        OR: [{ senderId: req.user.id }, { receiverId: req.user.id }],
       },
       orderBy: { createdAt: 'desc' },
       include: {

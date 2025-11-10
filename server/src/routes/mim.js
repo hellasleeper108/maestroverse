@@ -6,7 +6,7 @@
 import express from 'express';
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
-import { authenticate, authorize } from '../middleware/auth.js';
+import { authenticate } from '../middleware/auth.js';
 
 const router = express.Router();
 const prisma = new PrismaClient();
@@ -28,10 +28,10 @@ router.get('/rooms', authenticate, async (req, res) => {
           {
             type: 'PRIVATE',
             members: {
-              some: { userId }
-            }
-          }
-        ]
+              some: { userId },
+            },
+          },
+        ],
       },
       include: {
         creator: {
@@ -40,7 +40,7 @@ router.get('/rooms', authenticate, async (req, res) => {
             firstName: true,
             lastName: true,
             username: true,
-          }
+          },
         },
         members: {
           include: {
@@ -50,20 +50,20 @@ router.get('/rooms', authenticate, async (req, res) => {
                 firstName: true,
                 lastName: true,
                 username: true,
-              }
-            }
-          }
+              },
+            },
+          },
         },
         _count: {
           select: {
             members: true,
             messages: true,
-          }
-        }
+          },
+        },
       },
       orderBy: {
-        createdAt: 'asc'
-      }
+        createdAt: 'asc',
+      },
     });
 
     res.json({ rooms });
@@ -97,7 +97,7 @@ router.post('/rooms', authenticate, async (req, res) => {
 
     // Check for duplicate room name
     const existingRoom = await prisma.chatRoom.findFirst({
-      where: { name, isActive: true }
+      where: { name, isActive: true },
     });
 
     if (existingRoom) {
@@ -126,9 +126,9 @@ router.post('/rooms', authenticate, async (req, res) => {
             firstName: true,
             lastName: true,
             username: true,
-          }
-        }
-      }
+          },
+        },
+      },
     });
 
     // Auto-join creator as admin
@@ -137,7 +137,7 @@ router.post('/rooms', authenticate, async (req, res) => {
         roomId: room.id,
         userId,
         role: 'ADMIN',
-      }
+      },
     });
 
     res.status(201).json({ room });
@@ -165,7 +165,7 @@ router.get('/rooms/:id', authenticate, async (req, res) => {
             firstName: true,
             lastName: true,
             username: true,
-          }
+          },
         },
         members: {
           include: {
@@ -176,19 +176,19 @@ router.get('/rooms/:id', authenticate, async (req, res) => {
                 lastName: true,
                 username: true,
                 photoUrl: true,
-              }
-            }
+              },
+            },
           },
           orderBy: {
-            joinedAt: 'asc'
-          }
+            joinedAt: 'asc',
+          },
         },
         _count: {
           select: {
             messages: true,
-          }
-        }
-      }
+          },
+        },
+      },
     });
 
     if (!room) {
@@ -196,7 +196,7 @@ router.get('/rooms/:id', authenticate, async (req, res) => {
     }
 
     // Check if user has access (public room or is member of private room or is admin)
-    const isMember = room.members.some(m => m.userId === userId);
+    const isMember = room.members.some((m) => m.userId === userId);
     const isAdmin = req.user.role === 'ADMIN';
 
     if (room.type === 'PRIVATE' && !isMember && !isAdmin) {
@@ -225,9 +225,9 @@ router.post('/rooms/:id/join', authenticate, async (req, res) => {
       where: { id: roomId },
       include: {
         members: {
-          where: { userId }
-        }
-      }
+          where: { userId },
+        },
+      },
     });
 
     if (!room) {
@@ -269,9 +269,9 @@ router.post('/rooms/:id/join', authenticate, async (req, res) => {
             firstName: true,
             lastName: true,
             username: true,
-          }
-        }
-      }
+          },
+        },
+      },
     });
 
     res.json({ membership, message: 'Successfully joined room' });
@@ -296,8 +296,8 @@ router.post('/rooms/:id/leave', authenticate, async (req, res) => {
         roomId_userId: {
           roomId,
           userId,
-        }
-      }
+        },
+      },
     });
 
     if (!membership) {
@@ -306,7 +306,7 @@ router.post('/rooms/:id/leave', authenticate, async (req, res) => {
 
     // Delete membership
     await prisma.chatRoomMember.delete({
-      where: { id: membership.id }
+      where: { id: membership.id },
     });
 
     res.json({ message: 'Successfully left room' });
@@ -335,9 +335,9 @@ router.post('/rooms/:id/invite', authenticate, async (req, res) => {
       where: { id: roomId },
       include: {
         members: {
-          where: { userId }
-        }
-      }
+          where: { userId },
+        },
+      },
     });
 
     if (!room) {
@@ -351,7 +351,7 @@ router.post('/rooms/:id/invite', authenticate, async (req, res) => {
 
     // Check if invitee exists
     const invitee = await prisma.user.findUnique({
-      where: { id: inviteeId }
+      where: { id: inviteeId },
     });
 
     if (!invitee) {
@@ -364,8 +364,8 @@ router.post('/rooms/:id/invite', authenticate, async (req, res) => {
         roomId_userId: {
           roomId,
           userId: inviteeId,
-        }
-      }
+        },
+      },
     });
 
     if (existingMembership) {
@@ -386,9 +386,9 @@ router.post('/rooms/:id/invite', authenticate, async (req, res) => {
             firstName: true,
             lastName: true,
             username: true,
-          }
-        }
-      }
+          },
+        },
+      },
     });
 
     // Create notification
@@ -398,7 +398,7 @@ router.post('/rooms/:id/invite', authenticate, async (req, res) => {
         type: 'GROUP_INVITE',
         message: `${req.user.firstName} ${req.user.lastName} invited you to join ${room.name}`,
         link: `/mim?room=${roomId}`,
-      }
+      },
     });
 
     res.json({ membership, message: 'User invited successfully' });
@@ -424,9 +424,9 @@ router.get('/rooms/:id/messages', authenticate, async (req, res) => {
       where: { id: roomId },
       include: {
         members: {
-          where: { userId }
-        }
-      }
+          where: { userId },
+        },
+      },
     });
 
     if (!room) {
@@ -457,11 +457,11 @@ router.get('/rooms/:id/messages', authenticate, async (req, res) => {
             lastName: true,
             username: true,
             photoUrl: true,
-          }
-        }
+          },
+        },
       },
       orderBy: {
-        createdAt: 'desc'
+        createdAt: 'desc',
       },
       take: limit,
     });
@@ -486,7 +486,7 @@ router.delete('/rooms/:id', authenticate, async (req, res) => {
     const userId = req.user.id;
 
     const room = await prisma.chatRoom.findUnique({
-      where: { id: roomId }
+      where: { id: roomId },
     });
 
     if (!room) {
@@ -504,7 +504,7 @@ router.delete('/rooms/:id', authenticate, async (req, res) => {
     // Don't actually delete - just mark as inactive
     await prisma.chatRoom.update({
       where: { id: roomId },
-      data: { isActive: false }
+      data: { isActive: false },
     });
 
     res.json({ message: 'Room deleted successfully' });
@@ -529,11 +529,11 @@ router.delete('/messages/:id', authenticate, async (req, res) => {
         room: {
           include: {
             members: {
-              where: { userId }
-            }
-          }
-        }
-      }
+              where: { userId },
+            },
+          },
+        },
+      },
     });
 
     if (!message) {
@@ -542,15 +542,17 @@ router.delete('/messages/:id', authenticate, async (req, res) => {
 
     // Check permissions
     const isAuthor = message.authorId === userId;
-    const isRoomAdmin = message.room.members.some(m => m.userId === userId && m.role === 'ADMIN');
+    const isRoomAdmin = message.room.members.some((m) => m.userId === userId && m.role === 'ADMIN');
     const isSiteAdmin = req.user.role === 'ADMIN';
 
     if (!isAuthor && !isRoomAdmin && !isSiteAdmin) {
-      return res.status(403).json({ error: 'You can only delete your own messages or you must be a room/site admin' });
+      return res
+        .status(403)
+        .json({ error: 'You can only delete your own messages or you must be a room/site admin' });
     }
 
     await prisma.chatMessage.delete({
-      where: { id: messageId }
+      where: { id: messageId },
     });
 
     res.json({ message: 'Message deleted successfully' });

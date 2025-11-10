@@ -71,7 +71,8 @@ function PostDetail({ user, setUser }) {
   }
 
   async function handleDeletePost(postId) {
-    if (!confirm('Are you sure you want to delete this post? This will also delete all comments.')) return;
+    if (!confirm('Are you sure you want to delete this post? This will also delete all comments.'))
+      return;
 
     try {
       await hub.deletePost(postId);

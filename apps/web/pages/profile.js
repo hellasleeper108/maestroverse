@@ -129,7 +129,7 @@ function Profile({ user, setUser }) {
       projects: profile?._count?.projects ?? 0,
       connections: profile?._count?.connections ?? 0,
     }),
-    [profile],
+    [profile]
   );
 
   const statCards = [
@@ -197,7 +197,8 @@ function Profile({ user, setUser }) {
 
   const yearLabel = profile?.year ? YEAR_LABELS[profile.year] : null;
   const cohortLabel = profile?.cohort ? COHORT_LABELS[profile.cohort] : null;
-  const primaryRole = [profile?.major, yearLabel].filter(Boolean).join(' • ') || 'Add your academic focus';
+  const primaryRole =
+    [profile?.major, yearLabel].filter(Boolean).join(' • ') || 'Add your academic focus';
   const joinDate = formatDate(profile?.createdAt);
   const skills = profile?.skills ?? [];
   const interests = profile?.interests ?? [];
@@ -455,7 +456,9 @@ function Profile({ user, setUser }) {
 
               <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                 <div className="space-y-2">
-                  <label className="text-xs uppercase tracking-wide text-gray-500">First Name</label>
+                  <label className="text-xs uppercase tracking-wide text-gray-500">
+                    First Name
+                  </label>
                   <input
                     type="text"
                     name="firstName"
@@ -511,7 +514,9 @@ function Profile({ user, setUser }) {
                   </select>
                 </div>
                 <div className="space-y-2">
-                  <label className="text-xs uppercase tracking-wide text-gray-500">Study Cohort</label>
+                  <label className="text-xs uppercase tracking-wide text-gray-500">
+                    Study Cohort
+                  </label>
                   <select
                     name="cohort"
                     defaultValue={profile?.cohort || ''}

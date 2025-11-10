@@ -25,7 +25,7 @@ const cspConfig = {
     scriptSrc: [
       "'self'",
       "'unsafe-inline'", // Required for Next.js inline scripts (consider 'unsafe-eval' removal in production)
-      "'unsafe-eval'",   // Required for Next.js dev mode
+      "'unsafe-eval'", // Required for Next.js dev mode
       'https://cdn.socket.io', // Socket.IO CDN if using
     ],
     styleSrc: [
@@ -33,11 +33,7 @@ const cspConfig = {
       "'unsafe-inline'", // Required for styled-components/CSS-in-JS
       'https://fonts.googleapis.com',
     ],
-    fontSrc: [
-      "'self'",
-      'https://fonts.gstatic.com',
-      'data:',
-    ],
+    fontSrc: ["'self'", 'https://fonts.gstatic.com', 'data:'],
     imgSrc: [
       "'self'",
       'data:',
@@ -46,8 +42,8 @@ const cspConfig = {
     ],
     connectSrc: [
       "'self'",
-      'ws://localhost:3001',   // WebSocket (dev)
-      'wss://localhost:3001',  // WebSocket secure (dev)
+      'ws://localhost:3001', // WebSocket (dev)
+      'wss://localhost:3001', // WebSocket secure (dev)
       'http://localhost:3001', // API (dev)
       'http://localhost:3005', // Web frontend (dev)
       process.env.FRONTEND_URL || 'http://localhost:3000',
@@ -210,10 +206,5 @@ export function devSecurityHeaders(req, res, next) {
  * Apply in this order: secureCorsPreflight -> helmet -> customSecurityHeaders
  */
 export function applySecurityHeaders() {
-  return [
-    secureCorsPreflight,
-    securityHeaders,
-    customSecurityHeaders,
-    devSecurityHeaders,
-  ];
+  return [secureCorsPreflight, securityHeaders, customSecurityHeaders, devSecurityHeaders];
 }

@@ -179,7 +179,7 @@ function AdminDashboard({ user, setUser }) {
         if (entry.role === 'ADMIN') acc.admins += 1;
         return acc;
       },
-      { total: 0, active: 0, suspended: 0, banned: 0, admins: 0 },
+      { total: 0, active: 0, suspended: 0, banned: 0, admins: 0 }
     );
   }, [users]);
 
@@ -194,7 +194,9 @@ function AdminDashboard({ user, setUser }) {
       <div className="max-w-6xl mx-auto px-4 py-10 space-y-8">
         <header className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
           <div>
-            <h1 className="text-3xl font-semibold text-white drop-shadow-glow-blue">Moderator Console</h1>
+            <h1 className="text-3xl font-semibold text-white drop-shadow-glow-blue">
+              Moderator Console
+            </h1>
             <p className="text-sm text-gray-400">
               Manage user access, respond to reports, and keep the community safe.
             </p>
@@ -214,9 +216,7 @@ function AdminDashboard({ user, setUser }) {
           </div>
         )}
 
-        {error && (
-          <ErrorMessage message={error} onRetry={loadUsers} />
-        )}
+        {error && <ErrorMessage message={error} onRetry={loadUsers} />}
 
         {loading ? (
           <div className="flex justify-center py-12">
@@ -249,7 +249,9 @@ function AdminDashboard({ user, setUser }) {
                           <div className="text-xs text-gray-600">@{entry.username}</div>
                         </td>
                         <td className="px-4 py-4 align-top">
-                          <span className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold ${getStatusTone(entry.status)}`}>
+                          <span
+                            className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold ${getStatusTone(entry.status)}`}
+                          >
                             {entry.status}
                           </span>
                           {entry.moderationNote && (
@@ -259,9 +261,7 @@ function AdminDashboard({ user, setUser }) {
                         <td className="px-4 py-4 align-top text-xs text-gray-400">
                           {entry.suspendedUntil ? formatDate(entry.suspendedUntil) : '—'}
                         </td>
-                        <td className="px-4 py-4 align-top text-xs text-gray-400">
-                          {entry.role}
-                        </td>
+                        <td className="px-4 py-4 align-top text-xs text-gray-400">{entry.role}</td>
                         <td className="px-4 py-4 align-top text-xs text-gray-500">
                           <div>Created: {formatDate(entry.createdAt)}</div>
                           <div>Last active: {formatDate(entry.lastActive)}</div>
@@ -273,7 +273,9 @@ function AdminDashboard({ user, setUser }) {
                                 {SUSPEND_OPTIONS.map((option) => (
                                   <button
                                     key={option.minutes}
-                                    onClick={() => handleSuspend(entry.id, option.minutes, option.label)}
+                                    onClick={() =>
+                                      handleSuspend(entry.id, option.minutes, option.label)
+                                    }
                                     className="rounded-md border border-cyber-border/70 bg-cyber-surface/70 px-3 py-1 text-xs text-gray-200 hover:border-cyber-blue hover:text-white transition"
                                     disabled={actionUserId === entry.id}
                                   >
@@ -316,9 +318,7 @@ function AdminDashboard({ user, setUser }) {
                                 Delete
                               </button>
                             )}
-                            {isSelf && (
-                              <span className="text-xs text-gray-500">(This is you)</span>
-                            )}
+                            {isSelf && <span className="text-xs text-gray-500">(This is you)</span>}
                           </div>
                         </td>
                       </tr>

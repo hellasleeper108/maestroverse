@@ -6,11 +6,62 @@ const prisma = new PrismaClient();
 async function main() {
   console.log('🌱 Starting database seed...\n');
 
-  // Create demo users
-  console.log('Creating users...');
-  const password = await bcrypt.hash('password123', 10);
+  // Create demo users with different roles
+  console.log('Creating users with roles...');
+  const password = await bcrypt.hash('password123', 12);
 
   const users = await Promise.all([
+    // Admin user
+    prisma.user.create({
+      data: {
+        email: 'admin@maestro.edu',
+        username: 'admin',
+        password,
+        firstName: 'Admin',
+        lastName: 'User',
+        role: 'ADMIN',
+        bio: 'Platform administrator',
+        skills: ['Platform Management', 'Security', 'Operations'],
+        interests: ['Platform Health', 'User Safety', 'System Performance'],
+        isVerified: true,
+      },
+    }),
+
+    // Moderator user
+    prisma.user.create({
+      data: {
+        email: 'moderator@maestro.edu',
+        username: 'mod_sarah',
+        password,
+        firstName: 'Sarah',
+        lastName: 'Moderator',
+        role: 'MODERATOR',
+        major: 'Communications',
+        year: 4,
+        bio: 'Community moderator ensuring a safe learning environment',
+        skills: ['Communication', 'Conflict Resolution', 'Community Building'],
+        interests: ['Student Safety', 'Community Guidelines', 'Peer Support'],
+        isVerified: true,
+      },
+    }),
+
+    // Faculty user
+    prisma.user.create({
+      data: {
+        email: 'faculty@maestro.edu',
+        username: 'prof_johnson',
+        password,
+        firstName: 'Michael',
+        lastName: 'Johnson',
+        role: 'FACULTY',
+        bio: 'Computer Science professor specializing in distributed systems',
+        skills: ['Teaching', 'Research', 'Distributed Systems', 'Cloud Architecture'],
+        interests: ['Education Technology', 'Student Mentorship', 'Research'],
+        isVerified: true,
+      },
+    }),
+
+    // Student users
     prisma.user.create({
       data: {
         email: 'alice@maestro.edu',
@@ -18,12 +69,14 @@ async function main() {
         password,
         firstName: 'Alice',
         lastName: 'Wonder',
+        role: 'STUDENT',
         major: 'Computer Science',
         year: 3,
         bio: 'Full-stack developer passionate about AI and web technologies',
         skills: ['JavaScript', 'Python', 'React', 'Node.js'],
         interests: ['Artificial Intelligence', 'Web Development', 'Open Source'],
         isVerified: true,
+        cohort: 'advanced',
       },
     }),
     prisma.user.create({
@@ -33,12 +86,14 @@ async function main() {
         password,
         firstName: 'Bob',
         lastName: 'Builder',
+        role: 'STUDENT',
         major: 'Software Engineering',
         year: 4,
         bio: 'Senior software engineer, love building scalable systems',
         skills: ['Java', 'Go', 'Docker', 'Kubernetes'],
         interests: ['DevOps', 'Cloud Computing', 'System Design'],
         isVerified: true,
+        cohort: 'advanced',
       },
     }),
     prisma.user.create({
@@ -48,17 +103,21 @@ async function main() {
         password,
         firstName: 'Carol',
         lastName: 'Creative',
+        role: 'STUDENT',
         major: 'Design & Technology',
         year: 2,
         bio: 'UI/UX designer who codes',
         skills: ['Figma', 'CSS', 'TypeScript', 'React'],
         interests: ['Design Systems', 'Accessibility', 'Animation'],
         isVerified: true,
+        cohort: 'intermediate',
       },
     }),
   ]);
 
-  console.log(`✓ Created ${users.length} users\n`);
+  console.log(
+    `✓ Created ${users.length} users (1 Admin, 1 Moderator, 1 Faculty, ${users.length - 3} Students)\n`
+  );
 
   // Create courses
   console.log('Creating courses...');
@@ -129,7 +188,8 @@ async function main() {
   const posts = await Promise.all([
     prisma.post.create({
       data: {
-        content: 'Just finished my first full-stack project! So excited to share it with everyone 🚀',
+        content:
+          'Just finished my first full-stack project! So excited to share it with everyone 🚀',
         authorId: users[0].id,
         groupId: groups[0].id,
       },
@@ -216,7 +276,8 @@ async function main() {
     prisma.thread.create({
       data: {
         title: 'Best resources for learning React?',
-        content: 'What are your favorite resources for learning React? Looking for recommendations!',
+        content:
+          'What are your favorite resources for learning React? Looking for recommendations!',
         courseId: courses[2].id,
         authorId: users[0].id,
       },
@@ -245,10 +306,7 @@ async function main() {
         meetingTime: 'Wednesdays 6 PM',
         location: 'Library Room 301',
         members: {
-          create: [
-            { userId: users[0].id },
-            { userId: users[1].id },
-          ],
+          create: [{ userId: users[0].id }, { userId: users[1].id }],
         },
       },
     }),
@@ -309,7 +367,7 @@ async function main() {
 
   // Auto-join all users to the main lobby
   await Promise.all(
-    users.map(user =>
+    users.map((user) =>
       prisma.chatRoomMember.create({
         data: {
           roomId: chatRooms[0].id,

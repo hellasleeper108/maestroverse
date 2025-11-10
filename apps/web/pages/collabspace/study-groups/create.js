@@ -70,7 +70,10 @@ function CreateStudyGroup({ user, setUser }) {
     try {
       const payload = {
         ...formData,
-        tags: formData.tags.split(',').map((t) => t.trim()).filter(Boolean),
+        tags: formData.tags
+          .split(',')
+          .map((t) => t.trim())
+          .filter(Boolean),
         maxMembers: parseInt(formData.maxMembers),
         courseId: formData.courseId || null,
         cohort: formData.cohort || null,

@@ -3,6 +3,7 @@ import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
 import dotenv from 'dotenv';
+import cookieParser from 'cookie-parser';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
 import fileUpload from 'express-fileupload';
@@ -18,15 +19,24 @@ import collabspaceRoutes from './routes/collabspace.js';
 import searchRoutes from './routes/search.js';
 import adminRoutes from './routes/admin.js';
 import mimRoutes from './routes/mim.js';
+import filesRoutes from './routes/files.js';
 import { apiRateLimiter } from './middleware/rateLimiter.js';
+
+// OAuth configuration
+import passport from './config/passport.js';
+import { initializePassport } from './config/passport.js';
 
 // WebSocket handler
 import { initializeWebSocket } from './websocket/index.js';
+
+// File upload utilities
+import { ensureUploadDirectories } from './middleware/fileUpload.js';
 
 // Load environment variables
 dotenv.config();
 
 const __filename = fileURLToPath(import.meta.url);
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const __dirname = path.dirname(__filename);
 
 const app = express();
@@ -39,7 +49,7 @@ app.set('trust proxy', 1);
 
 const allowedOrigins = (process.env.CORS_ORIGINS || 'http://localhost:3005')
   .split(',')
-  .map(origin => origin.trim())
+  .map((origin) => origin.trim())
   .filter(Boolean);
 
 // Initialize Socket.IO for real-time features
@@ -61,21 +71,37 @@ const corsOptions = {
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Accept', 'Authorization', 'Content-Type', 'Origin', 'X-Requested-With', 'X-CSRF-Token'],
-  exposedHeaders: ['X-RateLimit-Limit', 'X-RateLimit-Remaining', 'X-RateLimit-Reset', 'Retry-After'],
+  allowedHeaders: [
+    'Accept',
+    'Authorization',
+    'Content-Type',
+    'Origin',
+    'X-Requested-With',
+    'X-CSRF-Token',
+  ],
+  exposedHeaders: [
+    'X-RateLimit-Limit',
+    'X-RateLimit-Remaining',
+    'X-RateLimit-Reset',
+    'Retry-After',
+  ],
 };
 
-app.use(helmet({
-  crossOriginEmbedderPolicy: false,
-  crossOriginResourcePolicy: { policy: 'cross-origin' },
-}));
+app.use(
+  helmet({
+    crossOriginEmbedderPolicy: false,
+    crossOriginResourcePolicy: { policy: 'cross-origin' },
+  })
+);
 
 if (isProd) {
-  app.use(helmet.hsts({
-    maxAge: 63072000,
-    includeSubDomains: true,
-    preload: true,
-  }));
+  app.use(
+    helmet.hsts({
+      maxAge: 63072000,
+      includeSubDomains: true,
+      preload: true,
+    })
+  );
 }
 
 app.use(cors(corsOptions));
@@ -98,14 +124,21 @@ if (isProd) {
 
 app.use(express.json({ limit: '1mb' }));
 app.use(express.urlencoded({ extended: true, limit: '1mb' }));
-app.use(fileUpload({
-  limits: { fileSize: parseInt(process.env.MAX_FILE_SIZE) || 10 * 1024 * 1024 },
-  abortOnLimit: true,
-  createParentPath: true,
-}));
+app.use(cookieParser());
+app.use(passport.initialize());
+app.use(
+  fileUpload({
+    limits: { fileSize: 5 * 1024 * 1024 }, // 5 MB limit for security
+    abortOnLimit: true,
+    createParentPath: true,
+    useTempFiles: true, // Use temp files for large uploads
+    tempFileDir: '/tmp/',
+  })
+);
 
-// Static file serving for uploads
-app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+// REMOVED: Public static file serving for security
+// Files are now served via signed URLs through /api/files routes
+// app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 // Health check
 app.get('/health', (req, res) => {
@@ -124,6 +157,7 @@ app.use('/api/collabspace', collabspaceRoutes);
 app.use('/api/mim', mimRoutes);
 app.use('/api/search', searchRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/files', filesRoutes); // Secure file serving with signed URLs
 
 // 404 handler
 app.use((req, res) => {
@@ -139,8 +173,14 @@ app.use((err, req, res, _next) => {
   });
 });
 
+// Initialize Passport.js OAuth
+initializePassport();
+
 // Initialize WebSocket
 initializeWebSocket(io);
+
+// Initialize secure upload directories
+await ensureUploadDirectories();
 
 // Start server
 const PORT = process.env.PORT || 3001;
@@ -149,12 +189,14 @@ httpServer.listen(PORT, () => {
   console.log(`\n🚀 Maestroverse Server running on http://localhost:${PORT}`);
   console.log(`📡 WebSocket server ready on ws://localhost:${PORT}`);
   console.log(`🔧 Environment: ${process.env.NODE_ENV || 'development'}`);
+  console.log(`🔒 Secure file uploads: Enabled (5MB limit, signed URLs)`);
   console.log(`\n📍 Available endpoints:`);
   console.log(`   - Student Hub:    http://localhost:${PORT}/api/hub`);
   console.log(`   - CareerLink:     http://localhost:${PORT}/api/careerlink`);
   console.log(`   - CollabSpace:    http://localhost:${PORT}/api/collabspace`);
   console.log(`   - Search:         http://localhost:${PORT}/api/search`);
-  console.log(`   - Admin:          http://localhost:${PORT}/api/admin\n`);
+  console.log(`   - Admin:          http://localhost:${PORT}/api/admin`);
+  console.log(`   - File Serving:   http://localhost:${PORT}/api/files\n`);
 });
 
 export { io };

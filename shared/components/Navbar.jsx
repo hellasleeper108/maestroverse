@@ -55,7 +55,9 @@ function Navbar({ currentModule, user, onLogout }) {
                 placeholder="Search..."
                 className="bg-gray-800/70 text-gray-100 placeholder:text-gray-500 px-4 py-2 rounded-lg border border-cyber-border focus:outline-none focus:ring-2 focus:ring-cyan-400/80 focus:border-cyber-blue w-64 transition"
               />
-              <span className="absolute right-3 top-2.5 text-gray-400 drop-shadow-glow-blue">🔍</span>
+              <span className="absolute right-3 top-2.5 text-gray-400 drop-shadow-glow-blue">
+                🔍
+              </span>
             </div>
 
             {/* Notifications */}
@@ -73,13 +75,13 @@ function Navbar({ currentModule, user, onLogout }) {
               {showNotifications && (
                 <div className="absolute right-0 mt-2 w-80 bg-cyber-surface/95 rounded-xl shadow-glow-blue border border-cyber-border overflow-hidden">
                   <div className="px-4 py-3 border-b border-cyber-border/60">
-                    <h3 className="text-white font-semibold drop-shadow-glow-blue">Notifications</h3>
+                    <h3 className="text-white font-semibold drop-shadow-glow-blue">
+                      Notifications
+                    </h3>
                   </div>
                   <div className="max-h-96 overflow-y-auto">
                     {/* Notification items would go here */}
-                    <div className="px-4 py-3 text-gray-400 text-sm">
-                      No new notifications
-                    </div>
+                    <div className="px-4 py-3 text-gray-400 text-sm">No new notifications</div>
                   </div>
                 </div>
               )}

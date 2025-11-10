@@ -1,0 +1,238 @@
+name: Maestroverse CI
+
+on:
+  pull_request:
+    branches: [main, develop]
+  push:
+    branches: [main, develop]
+
+# Cancel in-progress runs for the same workflow and PR/branch
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    name: Lint Code
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run ESLint
+        run: npm run lint
+        continue-on-error: false
+
+      - name: Check Prettier formatting
+        run: npm run format -- --check
+        continue-on-error: false
+
+  test:
+    name: Run Tests
+    runs-on: ubuntu-latest
+
+    # Service containers for database and cache
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: maestro
+          POSTGRES_PASSWORD: maestro123
+          POSTGRES_DB: maestro_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Setup test environment variables
+        run: |
+          cat > .env << EOF
+          # Database
+          DATABASE_URL=postgresql://maestro:maestro123@localhost:5432/maestro_test?schema=public
+
+          # Redis
+          REDIS_URL=redis://localhost:6379
+
+          # Authentication
+          JWT_SECRET=test-jwt-secret-for-ci-only-not-for-production-use
+
+          # OAuth (Placeholders for CI)
+          GOOGLE_CLIENT_ID=ci-test-google-client-id
+          GOOGLE_CLIENT_SECRET=ci-test-google-client-secret
+          GOOGLE_CALLBACK_URL=http://localhost:3001/api/auth/google/callback
+          GITHUB_CLIENT_ID=ci-test-github-client-id
+          GITHUB_CLIENT_SECRET=ci-test-github-client-secret
+          GITHUB_CALLBACK_URL=http://localhost:3001/api/auth/github/callback
+
+          # URLs
+          FRONTEND_URL=http://localhost:3005
+          API_URL=http://localhost:3001
+          CORS_ORIGINS=http://localhost:3005
+
+          # Environment
+          NODE_ENV=test
+
+          # Admin (Test)
+          ROOT_ADMIN_EMAILS=admin@test.com
+
+          # File Upload
+          MAX_FILE_SIZE=5242880
+
+          # Email (Placeholders for CI)
+          SMTP_HOST=smtp.test.com
+          SMTP_PORT=587
+          SMTP_USER=test@test.com
+          SMTP_PASS=test-password
+          SMTP_FROM=noreply@test.com
+          EOF
+
+      - name: Generate Prisma Client
+        run: npm run prisma:generate --workspace=server
+
+      - name: Run database migrations
+        run: npm run db:migrate --workspace=server
+        env:
+          DATABASE_URL: postgresql://maestro:maestro123@localhost:5432/maestro_test?schema=public
+
+      - name: Run tests
+        run: npm test
+        env:
+          DATABASE_URL: postgresql://maestro:maestro123@localhost:5432/maestro_test?schema=public
+          REDIS_URL: redis://localhost:6379
+          JWT_SECRET: test-jwt-secret-for-ci-only-not-for-production-use
+          NODE_ENV: test
+
+      - name: Run verification suite
+        run: bash test-verification.sh || true
+        continue-on-error: true
+
+  build:
+    name: Build Application
+    runs-on: ubuntu-latest
+    needs: [lint, test]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Setup build environment variables
+        run: |
+          cat > .env << EOF
+          # Placeholder environment for build
+          DATABASE_URL=postgresql://maestro:maestro123@localhost:5432/maestro?schema=public
+          REDIS_URL=redis://localhost:6379
+          JWT_SECRET=build-jwt-secret-placeholder
+          NEXT_PUBLIC_API_URL=http://localhost:3001
+          NODE_ENV=production
+          EOF
+
+      - name: Generate Prisma Client
+        run: npm run prisma:generate --workspace=server
+
+      - name: Build server
+        run: npm run build --workspace=server
+        continue-on-error: false
+
+      - name: Build web frontend
+        run: npm run build --workspace=apps/web
+        env:
+          NEXT_PUBLIC_API_URL: http://localhost:3001
+        continue-on-error: false
+
+  security:
+    name: Security Audit
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run npm audit
+        run: npm audit --audit-level=moderate
+        continue-on-error: true
+
+      - name: Check for secrets in code
+        uses: trufflesecurity/trufflehog@main
+        with:
+          path: ./
+          base: ${{ github.event.repository.default_branch }}
+          head: HEAD
+        continue-on-error: true
+
+  # Summary job that requires all checks to pass
+  ci-success:
+    name: CI Success
+    runs-on: ubuntu-latest
+    needs: [lint, test, build, security]
+    if: always()
+
+    steps:
+      - name: Check all jobs
+        run: |
+          if [[ "${{ needs.lint.result }}" != "success" ]]; then
+            echo "❌ Linting failed"
+            exit 1
+          fi
+          if [[ "${{ needs.test.result }}" != "success" ]]; then
+            echo "❌ Tests failed"
+            exit 1
+          fi
+          if [[ "${{ needs.build.result }}" != "success" ]]; then
+            echo "❌ Build failed"
+            exit 1
+          fi
+          echo "✅ All CI checks passed!"

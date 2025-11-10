@@ -35,8 +35,6 @@ function CollabSpace({ user, setUser }) {
     setUser(null);
   }
 
-  
-
   return (
     <div className="min-h-screen bg-gray-900">
       <Navbar currentModule="CollabSpace" user={user} onLogout={handleLogout} />
@@ -71,25 +69,22 @@ function CollabSpace({ user, setUser }) {
               {courses.map((course) => (
                 <Link key={course.id} href={`/collabspace/courses/${course.id}`}>
                   <div className="bg-gray-800 border border-gray-700 rounded-lg p-6 hover:border-teal-500 transition-colors cursor-pointer">
-
-                  <div className="flex items-start justify-between mb-4">
-                    <div>
-                      <div className="text-teal-400 font-bold text-sm mb-1">
-                        {course.code}
+                    <div className="flex items-start justify-between mb-4">
+                      <div>
+                        <div className="text-teal-400 font-bold text-sm mb-1">{course.code}</div>
+                        <h3 className="text-white font-semibold">{course.name}</h3>
                       </div>
-                      <h3 className="text-white font-semibold">{course.name}</h3>
+                      <div className="text-2xl">📚</div>
                     </div>
-                    <div className="text-2xl">📚</div>
-                  </div>
 
-                  <p className="text-gray-400 text-sm mb-4 line-clamp-2">
-                    {course.description || 'No description available'}
-                  </p>
+                    <p className="text-gray-400 text-sm mb-4 line-clamp-2">
+                      {course.description || 'No description available'}
+                    </p>
 
-                  <div className="flex items-center gap-4 text-sm text-gray-400">
-                    <span>💬 {course._count.threads} threads</span>
-                    <span>👥 {course._count.studyGroups} groups</span>
-                  </div>
+                    <div className="flex items-center gap-4 text-sm text-gray-400">
+                      <span>💬 {course._count.threads} threads</span>
+                      <span>👥 {course._count.studyGroups} groups</span>
+                    </div>
                   </div>
                 </Link>
               ))}
@@ -104,9 +99,7 @@ function CollabSpace({ user, setUser }) {
             <div className="bg-gray-800 border border-gray-700 rounded-lg p-6 hover:border-teal-500 transition-colors">
               <div className="text-3xl mb-3">💬</div>
               <h3 className="text-white font-semibold mb-1">Course Forums</h3>
-              <p className="text-gray-400 text-sm mb-4">
-                Ask questions and help classmates
-              </p>
+              <p className="text-gray-400 text-sm mb-4">Ask questions and help classmates</p>
               <p className="text-gray-500 text-xs">Select a course above to view forums</p>
             </div>
 
@@ -114,9 +107,7 @@ function CollabSpace({ user, setUser }) {
               <div className="bg-gray-800 border border-gray-700 rounded-lg p-6 hover:border-teal-500 transition-colors cursor-pointer">
                 <div className="text-3xl mb-3">👥</div>
                 <h3 className="text-white font-semibold mb-1">Study Groups</h3>
-                <p className="text-gray-400 text-sm mb-4">
-                  Find study partners and collaborate
-                </p>
+                <p className="text-gray-400 text-sm mb-4">Find study partners and collaborate</p>
                 <p className="text-teal-400 text-xs hover:underline">Browse study groups →</p>
               </div>
             </Link>
@@ -124,9 +115,7 @@ function CollabSpace({ user, setUser }) {
             <div className="bg-gray-800 border border-gray-700 rounded-lg p-6 hover:border-teal-500 transition-colors">
               <div className="text-3xl mb-3">📄</div>
               <h3 className="text-white font-semibold mb-1">Resources</h3>
-              <p className="text-gray-400 text-sm mb-4">
-                Share notes, slides, and study materials
-              </p>
+              <p className="text-gray-400 text-sm mb-4">Share notes, slides, and study materials</p>
               <p className="text-gray-500 text-xs">Select a course above to view resources</p>
             </div>
           </div>
