@@ -26,11 +26,9 @@ export function generateAccessToken(userId) {
     throw new Error('JWT_SECRET is not defined in environment variables');
   }
 
-  return jwt.sign(
-    { userId, type: 'access' },
-    process.env.JWT_SECRET,
-    { expiresIn: ACCESS_TOKEN_EXPIRY }
-  );
+  return jwt.sign({ userId, type: 'access' }, process.env.JWT_SECRET, {
+    expiresIn: ACCESS_TOKEN_EXPIRY,
+  });
 }
 
 /**

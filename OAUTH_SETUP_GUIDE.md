@@ -5,10 +5,12 @@ This guide explains how to set up and use OAuth2 authentication with Google and 
 ## 🎯 Overview
 
 Maestroverse now supports OAuth2 authentication via:
+
 - **Google** - Sign in with Google accounts
 - **GitHub** - Sign in with GitHub accounts
 
 **Key Features:**
+
 - **Account Linking**: OAuth accounts automatically link to existing users by email
 - **Profile Syncing**: User profiles are created/updated with OAuth provider information
 - **Secure Token Management**: OAuth tokens stored securely with JWT + refresh token flow
@@ -18,6 +20,7 @@ Maestroverse now supports OAuth2 authentication via:
 ## 📋 Prerequisites
 
 Before setting up OAuth:
+
 1. Complete the JWT + Refresh Token authentication setup (see `AUTH_MIGRATION_GUIDE.md`)
 2. Apply the OAuthAccount database migration
 3. Have admin access to Google Cloud Console and/or GitHub
@@ -84,6 +87,7 @@ GOOGLE_CALLBACK_URL=http://localhost:3001/api/auth/google/callback
 ```
 
 For production:
+
 ```bash
 GOOGLE_CALLBACK_URL=https://api.yourdomain.com/api/auth/google/callback
 ```
@@ -116,6 +120,7 @@ GITHUB_CALLBACK_URL=http://localhost:3001/api/auth/github/callback
 ```
 
 For production:
+
 ```bash
 GITHUB_CALLBACK_URL=https://api.yourdomain.com/api/auth/github/callback
 ```
@@ -129,6 +134,7 @@ FRONTEND_URL=http://localhost:3005
 ```
 
 For production:
+
 ```bash
 FRONTEND_URL=https://yourdomain.com
 ```
@@ -188,6 +194,7 @@ function LoginPage() {
 The OAuth system intelligently handles account linking:
 
 ### New User Registration
+
 ```
 1. User signs in with Google (alice@example.com)
 2. No user exists with this email
@@ -197,6 +204,7 @@ The OAuth system intelligently handles account linking:
 ```
 
 ### Linking to Existing Account
+
 ```
 1. User has account (alice@example.com) with password
 2. User clicks "Sign in with Google"
@@ -207,6 +215,7 @@ The OAuth system intelligently handles account linking:
 ```
 
 ### Multiple OAuth Providers
+
 ```
 1. User has account linked to Google
 2. User clicks "Sign in with GitHub"
@@ -383,12 +392,14 @@ curl http://localhost:3001/api/auth/oauth/accounts \
 ### "Cannot unlink the only authentication method" error
 
 **Solution**: User needs to:
+
 1. Set a password first, OR
 2. Link another OAuth provider
 
 ### Cookies not being set
 
 **Solution**:
+
 1. Ensure `cookie-parser` middleware is loaded
 2. Check CORS configuration allows credentials
 3. Verify frontend sends `credentials: 'include'`

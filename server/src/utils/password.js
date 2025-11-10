@@ -15,9 +15,9 @@ import zxcvbn from 'zxcvbn';
 // Argon2id configuration (2025 OWASP recommendations)
 const ARGON2_OPTIONS = {
   type: argon2.argon2id,
-  memoryCost: 65536,    // 64 MB
-  timeCost: 3,          // 3 iterations
-  parallelism: 4,       // 4 threads
+  memoryCost: 65536, // 64 MB
+  timeCost: 3, // 3 iterations
+  parallelism: 4, // 4 threads
 };
 
 /**
@@ -45,10 +45,7 @@ function getPepper() {
  */
 function applyPepper(password) {
   const pepper = getPepper();
-  return crypto
-    .createHmac('sha256', pepper)
-    .update(password)
-    .digest('hex');
+  return crypto.createHmac('sha256', pepper).update(password).digest('hex');
 }
 
 /**
@@ -81,7 +78,9 @@ export function validatePassword(password) {
 
   // Require minimum score of 3/4 (strong)
   if (strength.score < 3) {
-    errors.push(`Password is too weak. ${strength.feedback.warning || 'Use a stronger password with more variety.'}`);
+    errors.push(
+      `Password is too weak. ${strength.feedback.warning || 'Use a stronger password with more variety.'}`
+    );
     if (strength.feedback.suggestions.length > 0) {
       errors.push(...strength.feedback.suggestions);
     }
@@ -177,8 +176,5 @@ export function safeCompare(a, b) {
     return false;
   }
 
-  return crypto.timingSafeEqual(
-    Buffer.from(a, 'utf8'),
-    Buffer.from(b, 'utf8')
-  );
+  return crypto.timingSafeEqual(Buffer.from(a, 'utf8'), Buffer.from(b, 'utf8'));
 }

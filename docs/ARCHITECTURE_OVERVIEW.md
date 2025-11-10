@@ -38,6 +38,7 @@ Maestroverse is a Dockerised monorepo with a **single** Next.js frontend (`apps/
 ### Frontend Applications
 
 The unified frontend (`apps/web`) is a single Next.js 14 application with:
+
 - **Framework:** Next.js 14 with React 18
 - **Styling:** TailwindCSS powering the cyberpunk theme shared across modules
 - **Routing:** Next.js route groups for Hub, CareerLink, and CollabSpace sections
@@ -48,6 +49,7 @@ The unified frontend (`apps/web`) is a single Next.js 14 application with:
 ### Backend Server
 
 Single Express.js server handling all API requests:
+
 - **Framework:** Express.js
 - **Authentication:** JWT-based token authentication
 - **WebSocket:** Socket.IO for real-time features
@@ -58,12 +60,14 @@ Single Express.js server handling all API requests:
 ### Database Layer
 
 **PostgreSQL with Prisma ORM:**
+
 - Type-safe database queries
 - Automated migrations
 - Relationship management
 - Optimized indexes for performance
 
 **Redis (Optional):**
+
 - Session storage
 - Cache layer
 - Real-time pub/sub
@@ -73,11 +77,13 @@ Single Express.js server handling all API requests:
 ### Core Models
 
 **User** - Central authentication and profile
+
 - Shared across all modules
 - Contains: email, username, password, profile info
 - Relations to: posts, projects, portfolios, threads, etc.
 
 **Notification** - Unified notification system
+
 - Types: LIKE, COMMENT, MESSAGE, EVENT, MENTION, CONNECTION
 - Delivered via WebSocket in real-time
 
@@ -136,14 +142,17 @@ Single Express.js server handling all API requests:
 ### WebSocket Architecture
 
 **User Rooms:**
+
 - Each user joins `user:{userId}` room for personal notifications
 - Enables targeted message delivery
 
 **Group/Course Rooms:**
+
 - Users join `group:{groupId}` or `course:{courseId}` rooms
 - Enables broadcast to specific communities
 
 **Events:**
+
 - **Messaging:** Direct messages with delivery confirmation
 - **Notifications:** Real-time notification push
 - **Presence:** Online/offline status updates
@@ -179,17 +188,20 @@ Single Express.js server handling all API requests:
 ## Security Measures
 
 ### Authentication
+
 - JWT tokens with configurable expiration
 - Secure password hashing with bcrypt (10 rounds)
 - Token-based API authentication
 
 ### Data Protection
+
 - SQL injection prevention via Prisma ORM
 - XSS protection with input sanitization
 - CORS configuration for allowed origins
 - Helmet.js security headers
 
 ### Authorization
+
 - Role-based access control (STUDENT, FACULTY, ADMIN)
 - Resource ownership verification
 - Private group access control
@@ -197,17 +209,20 @@ Single Express.js server handling all API requests:
 ## Performance Optimizations
 
 ### Database
+
 - Indexed fields for frequent queries
 - Efficient relation loading with Prisma
 - Connection pooling
 - Query optimization with selective field loading
 
 ### Caching
+
 - Redis for session storage
 - API response caching
 - Static asset caching
 
 ### Frontend
+
 - Next.js automatic code splitting
 - Image optimization
 - Lazy loading of components
@@ -216,6 +231,7 @@ Single Express.js server handling all API requests:
 ## Deployment Architecture
 
 ### Development
+
 ```
 localhost:3005  → Unified Maestroverse web app (Docker)
 localhost:3001  → API / WebSocket server
@@ -224,6 +240,7 @@ localhost:6379  → Redis
 ```
 
 ### Production (Recommended)
+
 ```
 app.maestro.edu       → Unified web frontend (behind CDN)
 api.maestro.edu       → API Server (load balanced)
@@ -234,16 +251,19 @@ cache.internal        → Redis (private network)
 ## Scalability Considerations
 
 ### Horizontal Scaling
+
 - Stateless API servers (can run multiple instances)
 - Load balancer distribution
 - Redis for shared session state
 
 ### Database Scaling
+
 - Read replicas for query distribution
 - Connection pooling
 - Indexed queries for performance
 
 ### CDN Integration
+
 - Static asset delivery
 - Frontend application hosting
 - Global edge caching
@@ -251,17 +271,20 @@ cache.internal        → Redis (private network)
 ## Monitoring & Logging
 
 ### Application Logs
+
 - Morgan HTTP request logging
 - Error stack traces in development
 - Structured logging in production
 
 ### Metrics
+
 - API response times
 - Database query performance
 - WebSocket connection counts
 - User activity analytics
 
 ### Health Checks
+
 - `/health` endpoint for uptime monitoring
 - Database connection verification
 - Redis availability check
@@ -269,6 +292,7 @@ cache.internal        → Redis (private network)
 ## Future Enhancements
 
 ### Planned Features
+
 - Email notifications
 - Mobile applications (React Native)
 - Advanced search with Elasticsearch
@@ -277,6 +301,7 @@ cache.internal        → Redis (private network)
 - Analytics dashboard
 
 ### Technical Improvements
+
 - Microservices architecture
 - GraphQL API layer
 - Server-side rendering optimization

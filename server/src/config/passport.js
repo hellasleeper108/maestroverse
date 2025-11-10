@@ -136,17 +136,13 @@ export function configureGoogleStrategy() {
       {
         clientID: process.env.GOOGLE_CLIENT_ID,
         clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-        callbackURL: process.env.GOOGLE_CALLBACK_URL || 'http://localhost:3001/api/auth/google/callback',
+        callbackURL:
+          process.env.GOOGLE_CALLBACK_URL || 'http://localhost:3001/api/auth/google/callback',
         scope: ['profile', 'email'],
       },
       async (accessToken, refreshToken, profile, done) => {
         try {
-          const user = await findOrCreateOAuthUser(
-            'GOOGLE',
-            profile,
-            accessToken,
-            refreshToken
-          );
+          const user = await findOrCreateOAuthUser('GOOGLE', profile, accessToken, refreshToken);
           done(null, user);
         } catch (error) {
           console.error('[OAUTH] Google authentication error:', error);
@@ -173,17 +169,13 @@ export function configureGitHubStrategy() {
       {
         clientID: process.env.GITHUB_CLIENT_ID,
         clientSecret: process.env.GITHUB_CLIENT_SECRET,
-        callbackURL: process.env.GITHUB_CALLBACK_URL || 'http://localhost:3001/api/auth/github/callback',
+        callbackURL:
+          process.env.GITHUB_CALLBACK_URL || 'http://localhost:3001/api/auth/github/callback',
         scope: ['user:email'],
       },
       async (accessToken, refreshToken, profile, done) => {
         try {
-          const user = await findOrCreateOAuthUser(
-            'GITHUB',
-            profile,
-            accessToken,
-            refreshToken
-          );
+          const user = await findOrCreateOAuthUser('GITHUB', profile, accessToken, refreshToken);
           done(null, user);
         } catch (error) {
           console.error('[OAUTH] GitHub authentication error:', error);

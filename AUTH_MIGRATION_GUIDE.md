@@ -39,6 +39,7 @@ This guide explains the new secure authentication system implemented for Maestro
 ### Database Schema
 
 **New Model: `RefreshToken`**
+
 ```prisma
 model RefreshToken {
   id        String   @id @default(cuid())
@@ -163,9 +164,11 @@ openssl rand -base64 64
 ### New Endpoints
 
 #### `POST /api/auth/refresh`
+
 Refresh access token using refresh token (with automatic rotation).
 
 **Request:**
+
 ```json
 {
   "refreshToken": "optional-if-using-cookies"
@@ -173,6 +176,7 @@ Refresh access token using refresh token (with automatic rotation).
 ```
 
 **Response:**
+
 ```json
 {
   "message": "Token refreshed successfully",
@@ -181,9 +185,11 @@ Refresh access token using refresh token (with automatic rotation).
 ```
 
 #### `POST /api/auth/logout`
+
 Logout user and revoke refresh token.
 
 **Response:**
+
 ```json
 {
   "message": "Logged out successfully"
@@ -191,9 +197,11 @@ Logout user and revoke refresh token.
 ```
 
 #### `POST /api/auth/logout-all`
+
 Logout user from all devices (requires authentication).
 
 **Response:**
+
 ```json
 {
   "message": "Logged out from all devices (3 sessions terminated)"
@@ -203,6 +211,7 @@ Logout user from all devices (requires authentication).
 ### Modified Endpoints
 
 All existing auth endpoints now:
+
 - Accept tokens from cookies OR Authorization header (backward compatible)
 - Return tokens in both cookies AND response body
 - Use 15-minute access tokens instead of 7-day tokens
@@ -219,18 +228,18 @@ const response = await fetch('/api/auth/login', {
   method: 'POST',
   credentials: 'include', // Important: include cookies
   headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({ emailOrUsername, password })
+  body: JSON.stringify({ emailOrUsername, password }),
 });
 
 // Authenticated requests - cookies sent automatically
 const user = await fetch('/api/auth/me', {
-  credentials: 'include' // Important: include cookies
+  credentials: 'include', // Important: include cookies
 });
 
 // Refresh token - automatic when access token expires
 const refreshResponse = await fetch('/api/auth/refresh', {
   method: 'POST',
-  credentials: 'include'
+  credentials: 'include',
 });
 ```
 
@@ -247,7 +256,7 @@ localStorage.setItem('maestro_token', token);
 async function refreshToken() {
   const response = await fetch('/api/auth/refresh', {
     method: 'POST',
-    credentials: 'include'
+    credentials: 'include',
   });
   const { token } = await response.json();
   localStorage.setItem('maestro_token', token);
@@ -259,18 +268,21 @@ async function refreshToken() {
 
 ```javascript
 // Refresh token 1 minute before expiry (14 minutes)
-setInterval(() => {
-  refreshToken().catch(err => {
-    console.error('Token refresh failed:', err);
-    // Redirect to login
-    window.location.href = '/login';
-  });
-}, 14 * 60 * 1000); // 14 minutes
+setInterval(
+  () => {
+    refreshToken().catch((err) => {
+      console.error('Token refresh failed:', err);
+      // Redirect to login
+      window.location.href = '/login';
+    });
+  },
+  14 * 60 * 1000
+); // 14 minutes
 
 // Or handle 401 errors globally
 axios.interceptors.response.use(
-  response => response,
-  async error => {
+  (response) => response,
+  async (error) => {
     if (error.response?.status === 401) {
       try {
         await refreshToken();
@@ -375,13 +387,15 @@ node -e "import('./server/src/utils/tokens.js').then(m => m.cleanupExpiredTokens
 ### Issue: "No token provided" error
 
 **Solution**: Ensure cookies are included in requests:
+
 ```javascript
-fetch('/api/auth/me', { credentials: 'include' })
+fetch('/api/auth/me', { credentials: 'include' });
 ```
 
 ### Issue: Tokens not persisting across requests
 
 **Solution**:
+
 1. Check that `cookie-parser` middleware is loaded
 2. Verify `credentials: 'include'` in fetch requests
 3. Check CORS configuration allows credentials
@@ -389,6 +403,7 @@ fetch('/api/auth/me', { credentials: 'include' })
 ### Issue: "Invalid or expired token" on every request
 
 **Solution**:
+
 1. Verify JWT_SECRET is set correctly
 2. Check system clock is synchronized (JWT exp validation)
 3. Ensure token hasn't actually expired (15 min lifetime)
@@ -396,11 +411,12 @@ fetch('/api/auth/me', { credentials: 'include' })
 ### Issue: CORS errors with cookies
 
 **Solution**: Update CORS configuration:
+
 ```javascript
 cors({
   origin: 'http://localhost:3005',
   credentials: true, // Must be true for cookies
-})
+});
 ```
 
 ## 📚 Additional Resources
@@ -413,6 +429,7 @@ cors({
 ## 💬 Support
 
 If you encounter issues:
+
 1. Check the console logs for detailed error messages
 2. Verify environment variables are set correctly
 3. Ensure database migration was applied successfully

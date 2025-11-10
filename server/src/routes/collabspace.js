@@ -67,10 +67,7 @@ router.get('/courses/:courseId/threads', authenticate, async (req, res) => {
   try {
     const threads = await prisma.thread.findMany({
       where: { courseId: req.params.courseId },
-      orderBy: [
-        { isPinned: 'desc' },
-        { createdAt: 'desc' },
-      ],
+      orderBy: [{ isPinned: 'desc' }, { createdAt: 'desc' }],
       include: {
         author: {
           select: {
@@ -397,9 +394,9 @@ router.get('/study-groups', authenticate, async (req, res) => {
     });
 
     // Add isMember flag for current user
-    const groupsWithMembership = studyGroups.map(group => ({
+    const groupsWithMembership = studyGroups.map((group) => ({
       ...group,
-      isMember: group.members.some(m => m.userId === req.user.id),
+      isMember: group.members.some((m) => m.userId === req.user.id),
       isFull: group.members.length >= group.maxMembers,
     }));
 
@@ -450,7 +447,7 @@ router.get('/study-groups/my-groups', authenticate, async (req, res) => {
       },
     });
 
-    const studyGroups = memberships.map(m => ({
+    const studyGroups = memberships.map((m) => ({
       ...m.studyGroup,
       membershipRole: m.role,
       joinedAt: m.joinedAt,
@@ -510,7 +507,7 @@ router.get('/study-groups/:id', authenticate, async (req, res) => {
     }
 
     // Check if user is a member
-    const membership = studyGroup.members.find(m => m.userId === req.user.id);
+    const membership = studyGroup.members.find((m) => m.userId === req.user.id);
 
     res.json({
       studyGroup: {
@@ -518,7 +515,7 @@ router.get('/study-groups/:id', authenticate, async (req, res) => {
         isMember: !!membership,
         membershipRole: membership?.role,
         isFull: studyGroup.members.length >= studyGroup.maxMembers,
-      }
+      },
     });
   } catch (error) {
     console.error('Get study group error:', error);
@@ -542,7 +539,7 @@ router.post('/study-groups', authenticate, async (req, res) => {
       isPublic,
       meetingTime,
       meetingDays,
-      location
+      location,
     } = req.body;
 
     const studyGroup = await prisma.studyGroup.create({
@@ -619,7 +616,7 @@ router.put('/study-groups/:id', authenticate, async (req, res) => {
       isPublic,
       meetingTime,
       meetingDays,
-      location
+      location,
     } = req.body;
 
     const studyGroup = await prisma.studyGroup.update({
@@ -735,7 +732,7 @@ router.post('/study-groups/:id/leave', authenticate, async (req, res) => {
 
       if (adminCount === 1) {
         return res.status(400).json({
-          error: 'Cannot leave: You are the only admin. Promote another member to admin first.'
+          error: 'Cannot leave: You are the only admin. Promote another member to admin first.',
         });
       }
     }

@@ -70,16 +70,9 @@ export const PERMISSIONS = {
  * Role-to-permissions mapping
  */
 const ROLE_PERMISSIONS = {
-  [ROLES.STUDENT]: [
-    PERMISSIONS.USER_VIEW,
-    PERMISSIONS.GROUP_CREATE,
-  ],
+  [ROLES.STUDENT]: [PERMISSIONS.USER_VIEW, PERMISSIONS.GROUP_CREATE],
 
-  [ROLES.FACULTY]: [
-    PERMISSIONS.USER_VIEW,
-    PERMISSIONS.GROUP_CREATE,
-    PERMISSIONS.GROUP_MANAGE,
-  ],
+  [ROLES.FACULTY]: [PERMISSIONS.USER_VIEW, PERMISSIONS.GROUP_CREATE, PERMISSIONS.GROUP_MANAGE],
 
   [ROLES.MODERATOR]: [
     PERMISSIONS.USER_VIEW,
@@ -209,7 +202,7 @@ export function requirePermission(...permissions) {
     }
 
     const userPermissions = getRolePermissions(req.user.role);
-    const hasAllPermissions = permissions.every(permission =>
+    const hasAllPermissions = permissions.every((permission) =>
       userPermissions.includes(permission)
     );
 

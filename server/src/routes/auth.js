@@ -97,11 +97,7 @@ router.post('/register', registerRateLimiter, async (req, res) => {
 
     // Generate tokens
     const accessToken = generateAccessToken(user.id);
-    const refreshToken = await generateRefreshToken(
-      user.id,
-      req.ip,
-      req.headers['user-agent']
-    );
+    const refreshToken = await generateRefreshToken(user.id, req.ip, req.headers['user-agent']);
 
     // Set HTTP-only cookies
     setTokenCookies(res, accessToken, refreshToken);
@@ -184,11 +180,7 @@ router.post('/login', loginRateLimiter, async (req, res) => {
 
     // Generate tokens
     const accessToken = generateAccessToken(user.id);
-    const refreshToken = await generateRefreshToken(
-      user.id,
-      req.ip,
-      req.headers['user-agent']
-    );
+    const refreshToken = await generateRefreshToken(user.id, req.ip, req.headers['user-agent']);
 
     // Set HTTP-only cookies
     setTokenCookies(res, accessToken, refreshToken);
@@ -299,11 +291,7 @@ router.post('/refresh', async (req, res) => {
 
     // Generate new tokens
     const newAccessToken = generateAccessToken(user.id);
-    const newRefreshToken = await generateRefreshToken(
-      user.id,
-      req.ip,
-      req.headers['user-agent']
-    );
+    const newRefreshToken = await generateRefreshToken(user.id, req.ip, req.headers['user-agent']);
 
     // Set new cookies
     setTokenCookies(res, newAccessToken, newRefreshToken);
@@ -379,7 +367,10 @@ router.get('/google', passport.authenticate('google', { session: false }));
  */
 router.get(
   '/google/callback',
-  passport.authenticate('google', { session: false, failureRedirect: '/login?error=google_auth_failed' }),
+  passport.authenticate('google', {
+    session: false,
+    failureRedirect: '/login?error=google_auth_failed',
+  }),
   async (req, res) => {
     try {
       const user = req.user;
@@ -395,7 +386,9 @@ router.get(
 
       if (user.status === 'SUSPENDED') {
         if (user.suspendedUntil && user.suspendedUntil > new Date()) {
-          return res.redirect(`/login?error=account_suspended&until=${user.suspendedUntil.toISOString()}`);
+          return res.redirect(
+            `/login?error=account_suspended&until=${user.suspendedUntil.toISOString()}`
+          );
         }
 
         // Restore expired suspension
@@ -407,11 +400,7 @@ router.get(
 
       // Generate tokens
       const accessToken = generateAccessToken(user.id);
-      const refreshToken = await generateRefreshToken(
-        user.id,
-        req.ip,
-        req.headers['user-agent']
-      );
+      const refreshToken = await generateRefreshToken(user.id, req.ip, req.headers['user-agent']);
 
       // Set cookies
       setTokenCookies(res, accessToken, refreshToken);
@@ -438,7 +427,10 @@ router.get('/github', passport.authenticate('github', { session: false }));
  */
 router.get(
   '/github/callback',
-  passport.authenticate('github', { session: false, failureRedirect: '/login?error=github_auth_failed' }),
+  passport.authenticate('github', {
+    session: false,
+    failureRedirect: '/login?error=github_auth_failed',
+  }),
   async (req, res) => {
     try {
       const user = req.user;
@@ -454,7 +446,9 @@ router.get(
 
       if (user.status === 'SUSPENDED') {
         if (user.suspendedUntil && user.suspendedUntil > new Date()) {
-          return res.redirect(`/login?error=account_suspended&until=${user.suspendedUntil.toISOString()}`);
+          return res.redirect(
+            `/login?error=account_suspended&until=${user.suspendedUntil.toISOString()}`
+          );
         }
 
         // Restore expired suspension
@@ -466,11 +460,7 @@ router.get(
 
       // Generate tokens
       const accessToken = generateAccessToken(user.id);
-      const refreshToken = await generateRefreshToken(
-        user.id,
-        req.ip,
-        req.headers['user-agent']
-      );
+      const refreshToken = await generateRefreshToken(user.id, req.ip, req.headers['user-agent']);
 
       // Set cookies
       setTokenCookies(res, accessToken, refreshToken);
@@ -609,11 +599,7 @@ router.post('/sso/callback', async (req, res) => {
 
     // Generate tokens
     const accessToken = generateAccessToken(user.id);
-    const refreshToken = await generateRefreshToken(
-      user.id,
-      req.ip,
-      req.headers['user-agent']
-    );
+    const refreshToken = await generateRefreshToken(user.id, req.ip, req.headers['user-agent']);
 
     // Set HTTP-only cookies
     setTokenCookies(res, accessToken, refreshToken);

@@ -49,7 +49,7 @@ app.set('trust proxy', 1);
 
 const allowedOrigins = (process.env.CORS_ORIGINS || 'http://localhost:3005')
   .split(',')
-  .map(origin => origin.trim())
+  .map((origin) => origin.trim())
   .filter(Boolean);
 
 // Initialize Socket.IO for real-time features
@@ -71,21 +71,37 @@ const corsOptions = {
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Accept', 'Authorization', 'Content-Type', 'Origin', 'X-Requested-With', 'X-CSRF-Token'],
-  exposedHeaders: ['X-RateLimit-Limit', 'X-RateLimit-Remaining', 'X-RateLimit-Reset', 'Retry-After'],
+  allowedHeaders: [
+    'Accept',
+    'Authorization',
+    'Content-Type',
+    'Origin',
+    'X-Requested-With',
+    'X-CSRF-Token',
+  ],
+  exposedHeaders: [
+    'X-RateLimit-Limit',
+    'X-RateLimit-Remaining',
+    'X-RateLimit-Reset',
+    'Retry-After',
+  ],
 };
 
-app.use(helmet({
-  crossOriginEmbedderPolicy: false,
-  crossOriginResourcePolicy: { policy: 'cross-origin' },
-}));
+app.use(
+  helmet({
+    crossOriginEmbedderPolicy: false,
+    crossOriginResourcePolicy: { policy: 'cross-origin' },
+  })
+);
 
 if (isProd) {
-  app.use(helmet.hsts({
-    maxAge: 63072000,
-    includeSubDomains: true,
-    preload: true,
-  }));
+  app.use(
+    helmet.hsts({
+      maxAge: 63072000,
+      includeSubDomains: true,
+      preload: true,
+    })
+  );
 }
 
 app.use(cors(corsOptions));
@@ -110,13 +126,15 @@ app.use(express.json({ limit: '1mb' }));
 app.use(express.urlencoded({ extended: true, limit: '1mb' }));
 app.use(cookieParser());
 app.use(passport.initialize());
-app.use(fileUpload({
-  limits: { fileSize: 5 * 1024 * 1024 }, // 5 MB limit for security
-  abortOnLimit: true,
-  createParentPath: true,
-  useTempFiles: true, // Use temp files for large uploads
-  tempFileDir: '/tmp/',
-}));
+app.use(
+  fileUpload({
+    limits: { fileSize: 5 * 1024 * 1024 }, // 5 MB limit for security
+    abortOnLimit: true,
+    createParentPath: true,
+    useTempFiles: true, // Use temp files for large uploads
+    tempFileDir: '/tmp/',
+  })
+);
 
 // REMOVED: Public static file serving for security
 // Files are now served via signed URLs through /api/files routes

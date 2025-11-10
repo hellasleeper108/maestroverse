@@ -117,11 +117,7 @@ function Home({ user, setUser }) {
         ) : (
           <div className="space-y-6">
             {posts.map((post) => (
-              <PostCard
-                key={post.id}
-                post={post}
-                onLike={handleLike}
-              />
+              <PostCard key={post.id} post={post} onLike={handleLike} />
             ))}
           </div>
         )}

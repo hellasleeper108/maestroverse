@@ -119,9 +119,7 @@ function ThreadPage({ user, setUser }) {
                 </div>
               </div>
 
-              <p className="text-gray-300 leading-relaxed whitespace-pre-wrap">
-                {thread.content}
-              </p>
+              <p className="text-gray-300 leading-relaxed whitespace-pre-wrap">{thread.content}</p>
             </div>
 
             {/* Reply Form */}

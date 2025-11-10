@@ -115,7 +115,9 @@ async function main() {
     }),
   ]);
 
-  console.log(`✓ Created ${users.length} users (1 Admin, 1 Moderator, 1 Faculty, ${users.length - 3} Students)\n`);
+  console.log(
+    `✓ Created ${users.length} users (1 Admin, 1 Moderator, 1 Faculty, ${users.length - 3} Students)\n`
+  );
 
   // Create courses
   console.log('Creating courses...');
@@ -186,7 +188,8 @@ async function main() {
   const posts = await Promise.all([
     prisma.post.create({
       data: {
-        content: 'Just finished my first full-stack project! So excited to share it with everyone 🚀',
+        content:
+          'Just finished my first full-stack project! So excited to share it with everyone 🚀',
         authorId: users[0].id,
         groupId: groups[0].id,
       },
@@ -273,7 +276,8 @@ async function main() {
     prisma.thread.create({
       data: {
         title: 'Best resources for learning React?',
-        content: 'What are your favorite resources for learning React? Looking for recommendations!',
+        content:
+          'What are your favorite resources for learning React? Looking for recommendations!',
         courseId: courses[2].id,
         authorId: users[0].id,
       },
@@ -302,10 +306,7 @@ async function main() {
         meetingTime: 'Wednesdays 6 PM',
         location: 'Library Room 301',
         members: {
-          create: [
-            { userId: users[0].id },
-            { userId: users[1].id },
-          ],
+          create: [{ userId: users[0].id }, { userId: users[1].id }],
         },
       },
     }),
@@ -366,7 +367,7 @@ async function main() {
 
   // Auto-join all users to the main lobby
   await Promise.all(
-    users.map(user =>
+    users.map((user) =>
       prisma.chatRoomMember.create({
         data: {
           roomId: chatRooms[0].id,

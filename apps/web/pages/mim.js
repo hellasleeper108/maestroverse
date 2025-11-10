@@ -53,13 +53,13 @@ export default function MIM({ user, setUser: _setUser }) {
     if (rooms.length > 0 && !currentRoom) {
       const roomIdFromUrl = router.query.room;
       if (roomIdFromUrl) {
-        const room = rooms.find(r => r.id === roomIdFromUrl);
+        const room = rooms.find((r) => r.id === roomIdFromUrl);
         if (room) {
           joinRoom(room);
         }
       } else {
         // Auto-join first public room (lobby)
-        const lobby = rooms.find(r => r.type === 'PUBLIC');
+        const lobby = rooms.find((r) => r.type === 'PUBLIC');
         if (lobby) {
           joinRoom(lobby);
         }
@@ -93,7 +93,7 @@ export default function MIM({ user, setUser: _setUser }) {
 
     const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
     const newSocket = io(apiUrl, {
-      auth: { token }
+      auth: { token },
     });
 
     newSocket.on('connect', () => {
@@ -109,7 +109,7 @@ export default function MIM({ user, setUser: _setUser }) {
     });
 
     newSocket.on('chatroom:message', (message) => {
-      setMessages(prev => [...prev, message]);
+      setMessages((prev) => [...prev, message]);
       // Play notification sound
       playNotificationSound();
     });
@@ -119,15 +119,15 @@ export default function MIM({ user, setUser: _setUser }) {
     });
 
     newSocket.on('chatroom:user_joined', ({ user: joinedUser }) => {
-      setUsersInRoom(prev => [...prev, { ...joinedUser, isOnline: true }]);
+      setUsersInRoom((prev) => [...prev, { ...joinedUser, isOnline: true }]);
     });
 
     newSocket.on('chatroom:user_left', ({ userId }) => {
-      setUsersInRoom(prev => prev.filter(u => u.id !== userId));
+      setUsersInRoom((prev) => prev.filter((u) => u.id !== userId));
     });
 
     newSocket.on('chatroom:typing', ({ userId: _userId, firstName, isTyping }) => {
-      setTypingUsers(prev => {
+      setTypingUsers((prev) => {
         const newSet = new Set(prev);
         if (isTyping) {
           newSet.add(firstName);
@@ -139,7 +139,7 @@ export default function MIM({ user, setUser: _setUser }) {
     });
 
     newSocket.on('chatroom:message_deleted', ({ messageId }) => {
-      setMessages(prev => prev.filter(m => m.id !== messageId));
+      setMessages((prev) => prev.filter((m) => m.id !== messageId));
     });
 
     setSocket(newSocket);
@@ -274,7 +274,7 @@ export default function MIM({ user, setUser: _setUser }) {
         });
       } else {
         await mim.deleteMessage(messageId);
-        setMessages(prev => prev.filter(m => m.id !== messageId));
+        setMessages((prev) => prev.filter((m) => m.id !== messageId));
       }
     } catch (error) {
       console.error('Failed to delete message:', error);
@@ -361,7 +361,7 @@ export default function MIM({ user, setUser: _setUser }) {
             <p className="text-cyan-300 text-sm mt-1">{rooms.length} rooms available</p>
           </div>
           <div className="flex-1 overflow-y-auto custom-scrollbar">
-            {rooms.map(room => (
+            {rooms.map((room) => (
               <button
                 key={room.id}
                 onClick={() => joinRoom(room)}
@@ -432,10 +432,15 @@ export default function MIM({ user, setUser: _setUser }) {
                     const showAvatar = idx === 0 || messages[idx - 1].authorId !== message.authorId;
 
                     return (
-                      <div key={message.id} className={`flex items-end space-x-2 group animate-slideIn ${isOwnMessage ? 'flex-row-reverse space-x-reverse' : ''}`}>
+                      <div
+                        key={message.id}
+                        className={`flex items-end space-x-2 group animate-slideIn ${isOwnMessage ? 'flex-row-reverse space-x-reverse' : ''}`}
+                      >
                         {/* Avatar */}
                         {showAvatar ? (
-                          <div className={`w-10 h-10 rounded-full bg-gradient-to-br ${getRandomColor(message.author.id)} flex items-center justify-center text-white font-bold shadow-lg flex-shrink-0 ring-2 ring-slate-950`}>
+                          <div
+                            className={`w-10 h-10 rounded-full bg-gradient-to-br ${getRandomColor(message.author.id)} flex items-center justify-center text-white font-bold shadow-lg flex-shrink-0 ring-2 ring-slate-950`}
+                          >
                             {message.author.firstName[0]}
                           </div>
                         ) : (
@@ -443,7 +448,9 @@ export default function MIM({ user, setUser: _setUser }) {
                         )}
 
                         {/* Message Bubble */}
-                        <div className={`max-w-md ${isOwnMessage ? 'items-end' : 'items-start'} flex flex-col`}>
+                        <div
+                          className={`max-w-md ${isOwnMessage ? 'items-end' : 'items-start'} flex flex-col`}
+                        >
                           {showAvatar && (
                             <div className="flex items-center space-x-2 mb-1 px-2">
                               <span className="font-semibold text-slate-200 text-sm">
@@ -455,11 +462,13 @@ export default function MIM({ user, setUser: _setUser }) {
                             </div>
                           )}
 
-                          <div className={`relative px-4 py-2.5 rounded-2xl shadow-md border ${
-                            isOwnMessage
-                              ? 'bg-gradient-to-r from-cyan-500 via-emerald-500 to-cyan-500 text-slate-950 border-cyan-400/40 rounded-br-sm'
-                              : 'bg-slate-900/80 text-slate-100 border-slate-800 rounded-bl-sm'
-                          }`}>
+                          <div
+                            className={`relative px-4 py-2.5 rounded-2xl shadow-md border ${
+                              isOwnMessage
+                                ? 'bg-gradient-to-r from-cyan-500 via-emerald-500 to-cyan-500 text-slate-950 border-cyan-400/40 rounded-br-sm'
+                                : 'bg-slate-900/80 text-slate-100 border-slate-800 rounded-bl-sm'
+                            }`}
+                          >
                             <p className="break-words">{message.content}</p>
 
                             {/* Delete button */}
@@ -485,18 +494,28 @@ export default function MIM({ user, setUser: _setUser }) {
                   <div className="flex items-center space-x-2 text-sm text-slate-400 italic animate-pulse">
                     <div className="flex space-x-1">
                       <div className="w-2 h-2 bg-cyan-400 rounded-full animate-bounce"></div>
-                      <div className="w-2 h-2 bg-cyan-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-                      <div className="w-2 h-2 bg-cyan-400 rounded-full animate-bounce" style={{ animationDelay: '0.4s' }}></div>
+                      <div
+                        className="w-2 h-2 bg-cyan-400 rounded-full animate-bounce"
+                        style={{ animationDelay: '0.2s' }}
+                      ></div>
+                      <div
+                        className="w-2 h-2 bg-cyan-400 rounded-full animate-bounce"
+                        style={{ animationDelay: '0.4s' }}
+                      ></div>
                     </div>
                     <span>
-                      {Array.from(typingUsers).join(', ')} {typingUsers.size === 1 ? 'is' : 'are'} typing...
+                      {Array.from(typingUsers).join(', ')} {typingUsers.size === 1 ? 'is' : 'are'}{' '}
+                      typing...
                     </span>
                   </div>
                 )}
               </div>
 
               {/* Message Input */}
-              <form onSubmit={sendMessage} className="p-4 bg-slate-950 border-t border-slate-800 shadow-2xl">
+              <form
+                onSubmit={sendMessage}
+                className="p-4 bg-slate-950 border-t border-slate-800 shadow-2xl"
+              >
                 <div className="flex space-x-3">
                   <input
                     type="text"
@@ -522,7 +541,9 @@ export default function MIM({ user, setUser: _setUser }) {
             <div className="flex-1 flex flex-col items-center justify-center text-slate-400">
               <div className="text-8xl mb-6 animate-bounce">💬</div>
               <p className="text-2xl font-semibold text-slate-200">Welcome to MIM!</p>
-              <p className="text-lg mt-2 text-slate-400">Select a room from the left to start chatting</p>
+              <p className="text-lg mt-2 text-slate-400">
+                Select a room from the left to start chatting
+              </p>
             </div>
           )}
         </div>
@@ -538,13 +559,15 @@ export default function MIM({ user, setUser: _setUser }) {
               <p className="text-cyan-300 text-sm mt-1">{usersInRoom.length} in this room</p>
             </div>
             <div className="flex-1 overflow-y-auto custom-scrollbar">
-              {usersInRoom.map(roomUser => (
+              {usersInRoom.map((roomUser) => (
                 <div
                   key={roomUser.id}
                   className="p-4 border-b border-slate-800/60 hover:bg-slate-900/60 transition-colors"
                 >
                   <div className="flex items-center space-x-3">
-                    <div className={`w-10 h-10 rounded-full bg-gradient-to-br ${getRandomColor(roomUser.id)} flex items-center justify-center text-white font-bold shadow-lg ring-2 ${roomUser.isOnline ? 'ring-green-400' : 'ring-slate-600'}`}>
+                    <div
+                      className={`w-10 h-10 rounded-full bg-gradient-to-br ${getRandomColor(roomUser.id)} flex items-center justify-center text-white font-bold shadow-lg ring-2 ${roomUser.isOnline ? 'ring-green-400' : 'ring-slate-600'}`}
+                    >
                       {roomUser.firstName[0]}
                     </div>
                     <div className="flex-1 min-w-0">
@@ -560,7 +583,9 @@ export default function MIM({ user, setUser: _setUser }) {
                       </div>
                       <p className="text-xs text-cyan-300">@{roomUser.username}</p>
                     </div>
-                    <div className={`w-3 h-3 rounded-full ${roomUser.isOnline ? 'bg-green-400 shadow-lg shadow-green-400/50' : 'bg-slate-600'}`}></div>
+                    <div
+                      className={`w-3 h-3 rounded-full ${roomUser.isOnline ? 'bg-green-400 shadow-lg shadow-green-400/50' : 'bg-slate-600'}`}
+                    ></div>
                   </div>
                 </div>
               ))}
@@ -574,7 +599,7 @@ export default function MIM({ user, setUser: _setUser }) {
         <CreateRoomModal
           onClose={() => setShowCreateRoom(false)}
           onCreated={(newRoom) => {
-            setRooms(prev => [...prev, newRoom]);
+            setRooms((prev) => [...prev, newRoom]);
             setShowCreateRoom(false);
             joinRoom(newRoom);
           }}
@@ -646,9 +671,7 @@ function CreateRoomModal({ onClose, onCreated }) {
     <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 animate-fadeIn">
       <div className="bg-slate-950 border border-cyan-500/20 rounded-2xl p-8 w-full max-w-md shadow-2xl transform animate-scaleIn">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-3xl font-bold text-cyan-200">
-            Create New Room
-          </h2>
+          <h2 className="text-3xl font-bold text-cyan-200">Create New Room</h2>
           <button
             onClick={onClose}
             className="text-slate-500 hover:text-slate-300 text-2xl transition-colors"
@@ -659,9 +682,7 @@ function CreateRoomModal({ onClose, onCreated }) {
 
         <form onSubmit={handleSubmit} className="space-y-5">
           <div>
-            <label className="block text-sm font-bold text-slate-200 mb-2">
-              Room Name *
-            </label>
+            <label className="block text-sm font-bold text-slate-200 mb-2">Room Name *</label>
             <input
               type="text"
               value={name}
@@ -673,9 +694,7 @@ function CreateRoomModal({ onClose, onCreated }) {
           </div>
 
           <div>
-            <label className="block text-sm font-bold text-slate-200 mb-2">
-              Description
-            </label>
+            <label className="block text-sm font-bold text-slate-200 mb-2">Description</label>
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
@@ -686,9 +705,7 @@ function CreateRoomModal({ onClose, onCreated }) {
           </div>
 
           <div>
-            <label className="block text-sm font-bold text-slate-200 mb-2">
-              Room Type
-            </label>
+            <label className="block text-sm font-bold text-slate-200 mb-2">Room Type</label>
             <div className="grid grid-cols-2 gap-3">
               <button
                 type="button"
@@ -719,9 +736,7 @@ function CreateRoomModal({ onClose, onCreated }) {
 
           {type === 'PRIVATE' && (
             <div className="animate-slideIn">
-              <label className="block text-sm font-bold text-slate-200 mb-2">
-                Password *
-              </label>
+              <label className="block text-sm font-bold text-slate-200 mb-2">Password *</label>
               <input
                 type="password"
                 value={password}
@@ -754,8 +769,12 @@ function CreateRoomModal({ onClose, onCreated }) {
 
       <style jsx>{`
         @keyframes fadeIn {
-          from { opacity: 0; }
-          to { opacity: 1; }
+          from {
+            opacity: 0;
+          }
+          to {
+            opacity: 1;
+          }
         }
         @keyframes scaleIn {
           from {

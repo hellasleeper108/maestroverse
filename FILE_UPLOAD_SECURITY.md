@@ -20,12 +20,14 @@ Maestroverse implements enterprise-grade file upload security with:
 Files are validated against a strict whitelist of allowed MIME types:
 
 **Images:**
+
 - `image/jpeg` (.jpg, .jpeg)
 - `image/png` (.png)
 - `image/gif` (.gif)
 - `image/webp` (.webp)
 
 **Documents:**
+
 - `application/pdf` (.pdf)
 - `application/msword` (.doc)
 - `application/vnd.openxmlformats-officedocument.wordprocessingml.document` (.docx)
@@ -33,6 +35,7 @@ Files are validated against a strict whitelist of allowed MIME types:
 - `text/csv` (.csv)
 
 **Archives:**
+
 - `application/zip` (.zip)
 
 ### 2. File Size Limits
@@ -44,6 +47,7 @@ Files are validated against a strict whitelist of allowed MIME types:
 ### 3. Path Traversal Prevention
 
 **Secure Filename Generation:**
+
 ```javascript
 // Original: ../../../../etc/passwd
 // Secure:   a3f7b9c2d8e4f1a6_1705234567890.jpg
@@ -57,6 +61,7 @@ Files are validated against a strict whitelist of allowed MIME types:
 ### 4. Private Storage
 
 **Directory Structure:**
+
 ```
 server/
 ├── private-uploads/        # Not publicly accessible
@@ -67,6 +72,7 @@ server/
 ```
 
 **Key Points:**
+
 - Files stored in `private-uploads/` directory
 - **NOT** served via static middleware
 - **NOT** accessible via direct URL paths
@@ -77,11 +83,13 @@ server/
 Files are accessed using time-limited JWT tokens:
 
 **URL Format:**
+
 ```
 GET /api/files/serve/{signed-token}
 ```
 
 **Token Contents:**
+
 ```javascript
 {
   filename: "a3f7b9c2d8e4f1a6_1705234567890.jpg",
@@ -93,6 +101,7 @@ GET /api/files/serve/{signed-token}
 ```
 
 **Expiration Times:**
+
 - **Download URLs:** 15 minutes (temporary access)
 - **View URLs:** 1 hour (standard viewing)
 - **Embed URLs:** 24 hours (long-lived for pages)
@@ -213,7 +222,7 @@ async function uploadPhoto(file) {
 
 ```javascript
 // Use signed URL directly in img tag
-<img src={signedPhotoUrl} alt="Profile" />
+<img src={signedPhotoUrl} alt="Profile" />;
 
 // Signed URLs expire - regenerate as needed
 async function getLatestPhotoUrl(filename, category) {
@@ -246,7 +255,7 @@ const validation = validateFile(file, {
 
 ```javascript
 // ✅ Good: Reasonable file size limit
-maxSize: 5 * 1024 * 1024 // 5MB
+maxSize: 5 * 1024 * 1024; // 5MB
 
 // ❌ Bad: No limit or very large limit
 // maxSize: 100 * 1024 * 1024 // 100MB - too large!
@@ -302,12 +311,14 @@ if (!validateFileExtension(file.mimetype, file.name)) {
 ### Path Traversal Attack
 
 **Attack Attempt:**
+
 ```javascript
 // Malicious filename
-filename: "../../../etc/passwd"
+filename: '../../../etc/passwd';
 ```
 
 **Prevention:**
+
 ```javascript
 // Secure filename generation ignores original name
 const secureFilename = generateSecureFilename('.txt');
@@ -317,6 +328,7 @@ const secureFilename = generateSecureFilename('.txt');
 ### MIME Type Spoofing
 
 **Attack Attempt:**
+
 ```javascript
 // Malicious file: shell.php.jpg
 // Content: <?php system($_GET['cmd']); ?>
@@ -324,6 +336,7 @@ const secureFilename = generateSecureFilename('.txt');
 ```
 
 **Prevention:**
+
 ```javascript
 // Extension must match MIME type
 if (mimetype === 'image/jpeg' && !extension.match(/\.jpe?g$/i)) {
@@ -334,28 +347,34 @@ if (mimetype === 'image/jpeg' && !extension.match(/\.jpe?g$/i)) {
 ### File Bomb / Zip Bomb
 
 **Attack Attempt:**
+
 ```javascript
 // 42KB file that expands to 5GB
 upload('zipbomb.zip');
 ```
 
 **Prevention:**
+
 ```javascript
 // Strict file size limits
-app.use(fileUpload({
-  limits: { fileSize: 5 * 1024 * 1024 },
-  abortOnLimit: true, // Immediately abort if exceeded
-}));
+app.use(
+  fileUpload({
+    limits: { fileSize: 5 * 1024 * 1024 },
+    abortOnLimit: true, // Immediately abort if exceeded
+  })
+);
 ```
 
 ### Unauthorized File Access
 
 **Attack Attempt:**
+
 ```
 GET /uploads/other-user-photo.jpg
 ```
 
 **Prevention:**
+
 ```javascript
 // Files require signed URLs with user-specific tokens
 const token = generateSignedUrl(filename, category, {
@@ -418,7 +437,7 @@ const expiredToken = jwt.sign(
 );
 
 // Wait 2 seconds
-await new Promise(resolve => setTimeout(resolve, 2000));
+await new Promise((resolve) => setTimeout(resolve, 2000));
 
 // Should fail with "Invalid or expired file access token"
 const response = await fetch(`http://localhost:3001/api/files/serve/${expiredToken}`);
@@ -456,6 +475,7 @@ JWT_SECRET=your-super-secret-256-bit-key
 ### Additional Hardening
 
 1. **Enable HTTPS Only**
+
    ```javascript
    if (!req.secure) {
      return res.redirect(301, `https://${req.headers.host}${req.originalUrl}`);
@@ -463,6 +483,7 @@ JWT_SECRET=your-super-secret-256-bit-key
    ```
 
 2. **Add Rate Limiting**
+
    ```javascript
    const uploadLimiter = rateLimit({
      windowMs: 15 * 60 * 1000, // 15 minutes
@@ -472,6 +493,7 @@ JWT_SECRET=your-super-secret-256-bit-key
    ```
 
 3. **Implement Virus Scanning**
+
    ```javascript
    import ClamScan from 'clamscan';
 
@@ -484,6 +506,7 @@ JWT_SECRET=your-super-secret-256-bit-key
    ```
 
 4. **Monitor Upload Activity**
+
    ```javascript
    console.log(`[UPLOAD] User ${req.user.id} uploaded ${file.mimetype} (${file.size} bytes)`);
    ```
@@ -499,12 +522,14 @@ JWT_SECRET=your-super-secret-256-bit-key
 If migrating from public `/uploads` directory:
 
 1. **Move files to private storage:**
+
    ```bash
    mkdir -p server/private-uploads/photos
    mv server/uploads/photos/* server/private-uploads/photos/
    ```
 
 2. **Update database references:**
+
    ```sql
    -- Convert old URL format to filename format
    UPDATE users
@@ -520,11 +545,9 @@ If migrating from public `/uploads` directory:
    // When returning user data
    if (user.photoUrl) {
      const photoData = JSON.parse(user.photoUrl);
-     user.photoUrl = createPublicSignedUrl(
-       photoData.filename,
-       photoData.category,
-       { expiresIn: 24 * 60 * 60 }
-     );
+     user.photoUrl = createPublicSignedUrl(photoData.filename, photoData.category, {
+       expiresIn: 24 * 60 * 60,
+     });
    }
    ```
 
@@ -566,6 +589,7 @@ If migrating from public `/uploads` directory:
 **Cause:** Form field name doesn't match expected name.
 
 **Solution:** Ensure field name matches middleware configuration:
+
 ```javascript
 formData.append('photo', file); // Must be 'photo' for imageUploadMiddleware
 ```
@@ -575,6 +599,7 @@ formData.append('photo', file); // Must be 'photo' for imageUploadMiddleware
 **Cause:** MIME type not in whitelist.
 
 **Solution:** Add MIME type to `ALLOWED_MIMETYPES` in `fileUpload.js` or use custom middleware:
+
 ```javascript
 const customUpload = fileUploadMiddleware({
   allowedTypes: ['image/jpeg', 'image/png', 'your/mimetype'],
@@ -586,6 +611,7 @@ const customUpload = fileUploadMiddleware({
 **Cause:** File extension doesn't match MIME type (possible spoofing attempt).
 
 **Solution:** Ensure file has correct extension for its type:
+
 ```
 ✅ file.jpg with MIME image/jpeg
 ❌ file.jpg with MIME application/pdf
@@ -596,6 +622,7 @@ const customUpload = fileUploadMiddleware({
 **Cause:** Token expiration time passed.
 
 **Solution:** Regenerate signed URL:
+
 ```javascript
 const newUrl = createPublicSignedUrl(filename, category, { expiresIn: 3600 });
 ```

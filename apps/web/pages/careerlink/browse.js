@@ -58,8 +58,6 @@ function BrowseStudents({ user, setUser }) {
     setUser(null);
   }
 
-  
-
   return (
     <div className="min-h-screen bg-gray-900">
       <Navbar currentModule="CareerLink" user={user} onLogout={handleLogout} />
@@ -176,9 +174,7 @@ function BrowseStudents({ user, setUser }) {
                   </div>
 
                   {student.bio && (
-                    <p className="text-gray-300 text-sm mb-4 line-clamp-2">
-                      {student.bio}
-                    </p>
+                    <p className="text-gray-300 text-sm mb-4 line-clamp-2">{student.bio}</p>
                   )}
 
                   <div className="space-y-2 mb-4">

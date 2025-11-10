@@ -15,6 +15,7 @@ This guide explains Maestroverse's comprehensive role-based access control syste
 ## 🎯 Overview
 
 Maestroverse implements a hierarchical RBAC system with:
+
 - **4 roles**: STUDENT, FACULTY, MODERATOR, ADMIN
 - **Role hierarchy**: ADMIN > MODERATOR > FACULTY > STUDENT
 - **Permission-based access**: Granular control over specific actions
@@ -52,18 +53,21 @@ STUDENT (Level 1)
 ### Role Definitions
 
 #### STUDENT
+
 - **Default role** for new users
 - Can create posts, comments, and join groups
 - Can manage own content
 - Limited moderation capabilities
 
 #### FACULTY
+
 - Teaching staff and instructors
 - Can create and manage courses
 - Enhanced group management
 - All student permissions
 
 #### MODERATOR
+
 - Community moderators
 - Can suspend users temporarily
 - Can delete any post/comment
@@ -71,6 +75,7 @@ STUDENT (Level 1)
 - All faculty permissions
 
 #### ADMIN
+
 - Platform administrators
 - Full system access
 - Can ban users permanently
@@ -83,65 +88,71 @@ STUDENT (Level 1)
 ### Permission Categories
 
 #### User Management
+
 ```javascript
-USER_VIEW          // View user profiles
-USER_EDIT          // Edit user information
-USER_DELETE        // Delete user accounts
-USER_BAN           // Permanently ban users
-USER_SUSPEND       // Temporarily suspend users
-USER_PROMOTE       // Change user roles
+USER_VIEW; // View user profiles
+USER_EDIT; // Edit user information
+USER_DELETE; // Delete user accounts
+USER_BAN; // Permanently ban users
+USER_SUSPEND; // Temporarily suspend users
+USER_PROMOTE; // Change user roles
 ```
 
 #### Content Moderation
+
 ```javascript
-POST_MODERATE      // Moderate posts
-POST_DELETE_ANY    // Delete any post
-COMMENT_MODERATE   // Moderate comments
-COMMENT_DELETE_ANY // Delete any comment
+POST_MODERATE; // Moderate posts
+POST_DELETE_ANY; // Delete any post
+COMMENT_MODERATE; // Moderate comments
+COMMENT_DELETE_ANY; // Delete any comment
 ```
 
 #### Group Management
+
 ```javascript
-GROUP_CREATE       // Create new groups
-GROUP_MANAGE       // Manage group settings
-GROUP_DELETE_ANY   // Delete any group
+GROUP_CREATE; // Create new groups
+GROUP_MANAGE; // Manage group settings
+GROUP_DELETE_ANY; // Delete any group
 ```
 
 #### Admin Panel
+
 ```javascript
-ADMIN_PANEL_ACCESS // Access admin dashboard
-ADMIN_ANALYTICS    // View analytics
-ADMIN_SETTINGS     // Change platform settings
+ADMIN_PANEL_ACCESS; // Access admin dashboard
+ADMIN_ANALYTICS; // View analytics
+ADMIN_SETTINGS; // Change platform settings
 ```
 
 #### System
+
 ```javascript
-SYSTEM_CONFIG      // System configuration
-SYSTEM_LOGS        // View system logs
+SYSTEM_CONFIG; // System configuration
+SYSTEM_LOGS; // View system logs
 ```
 
 ### Permission Matrix
 
-| Permission | STUDENT | FACULTY | MODERATOR | ADMIN |
-|-----------|---------|---------|-----------|-------|
-| USER_VIEW | ✅ | ✅ | ✅ | ✅ |
-| USER_EDIT | ❌ | ❌ | ❌ | ✅ |
-| USER_DELETE | ❌ | ❌ | ❌ | ✅ |
-| USER_BAN | ❌ | ❌ | ❌ | ✅ |
-| USER_SUSPEND | ❌ | ❌ | ✅ | ✅ |
-| USER_PROMOTE | ❌ | ❌ | ❌ | ✅ |
-| POST_MODERATE | ❌ | ❌ | ✅ | ✅ |
-| POST_DELETE_ANY | ❌ | ❌ | ✅ | ✅ |
-| GROUP_CREATE | ✅ | ✅ | ✅ | ✅ |
-| GROUP_MANAGE | ❌ | ✅ | ✅ | ✅ |
-| ADMIN_PANEL_ACCESS | ❌ | ❌ | ✅ | ✅ |
-| SYSTEM_CONFIG | ❌ | ❌ | ❌ | ✅ |
+| Permission         | STUDENT | FACULTY | MODERATOR | ADMIN |
+| ------------------ | ------- | ------- | --------- | ----- |
+| USER_VIEW          | ✅      | ✅      | ✅        | ✅    |
+| USER_EDIT          | ❌      | ❌      | ❌        | ✅    |
+| USER_DELETE        | ❌      | ❌      | ❌        | ✅    |
+| USER_BAN           | ❌      | ❌      | ❌        | ✅    |
+| USER_SUSPEND       | ❌      | ❌      | ✅        | ✅    |
+| USER_PROMOTE       | ❌      | ❌      | ❌        | ✅    |
+| POST_MODERATE      | ❌      | ❌      | ✅        | ✅    |
+| POST_DELETE_ANY    | ❌      | ❌      | ✅        | ✅    |
+| GROUP_CREATE       | ✅      | ✅      | ✅        | ✅    |
+| GROUP_MANAGE       | ❌      | ✅      | ✅        | ✅    |
+| ADMIN_PANEL_ACCESS | ❌      | ❌      | ✅        | ✅    |
+| SYSTEM_CONFIG      | ❌      | ❌      | ❌        | ✅    |
 
 ## 🛡️ Middleware
 
 ### Basic Middleware
 
 #### 1. requireRole(...roles)
+
 Requires user to have one of the specified roles (exact match).
 
 ```javascript
@@ -155,6 +166,7 @@ router.post('/courses', authenticate, requireRole(ROLES.ADMIN, ROLES.FACULTY), h
 ```
 
 #### 2. requireRoleLevel(minimumRole)
+
 Requires user to have at least the specified role level (hierarchical).
 
 ```javascript
@@ -168,20 +180,18 @@ router.post('/courses/:id', authenticate, requireRoleLevel(ROLES.FACULTY), handl
 ```
 
 #### 3. requirePermission(...permissions)
+
 Requires user to have specific permissions.
 
 ```javascript
 import { requirePermission, PERMISSIONS } from '../middleware/rbac.js';
 
 // Requires ban permission
-router.post('/users/:id/ban',
-  authenticate,
-  requirePermission(PERMISSIONS.USER_BAN),
-  handler
-);
+router.post('/users/:id/ban', authenticate, requirePermission(PERMISSIONS.USER_BAN), handler);
 
 // Requires multiple permissions
-router.post('/users/:id/promote',
+router.post(
+  '/users/:id/promote',
   authenticate,
   requirePermission(PERMISSIONS.USER_EDIT, PERMISSIONS.USER_PROMOTE),
   handler
@@ -191,6 +201,7 @@ router.post('/users/:id/promote',
 ### Convenience Middleware
 
 #### requireAdmin
+
 Shorthand for `requireRole(ROLES.ADMIN)`.
 
 ```javascript
@@ -200,6 +211,7 @@ router.post('/admin/config', authenticate, requireAdmin, handler);
 ```
 
 #### requireModerator
+
 Shorthand for `requireRoleLevel(ROLES.MODERATOR)`.
 
 ```javascript
@@ -209,6 +221,7 @@ router.get('/moderation/reports', authenticate, requireModerator, handler);
 ```
 
 #### requireFaculty
+
 Shorthand for `requireRoleLevel(ROLES.FACULTY)`.
 
 ```javascript
@@ -220,13 +233,15 @@ router.post('/courses/create', authenticate, requireFaculty, handler);
 ### Ownership-Based Middleware
 
 #### requireOwnershipOrRole(ownershipField, ...allowedRoles)
+
 Allows resource owner OR users with specified roles.
 
 ```javascript
 import { requireOwnershipOrRole, ROLES } from '../middleware/rbac.js';
 
 // User can edit their own profile, OR moderator/admin can edit any
-router.put('/users/:userId/profile',
+router.put(
+  '/users/:userId/profile',
   authenticate,
   requireOwnershipOrRole('userId', ROLES.MODERATOR, ROLES.ADMIN),
   handler
@@ -234,13 +249,15 @@ router.put('/users/:userId/profile',
 ```
 
 #### requireResourceOwnership(model, resourceIdParam, ownerField, ...allowedRoles)
+
 Checks database resource ownership.
 
 ```javascript
 import { requireResourceOwnership, ROLES } from '../middleware/rbac.js';
 
 // User can delete their own post, OR moderator/admin can delete any
-router.delete('/posts/:postId',
+router.delete(
+  '/posts/:postId',
   authenticate,
   requireResourceOwnership('post', 'postId', 'authorId', ROLES.MODERATOR, ROLES.ADMIN),
   handler
@@ -283,7 +300,8 @@ router.post('/courses', authenticate, requireFaculty, async (req, res) => {
 ### Example 4: Permission-Based User Ban
 
 ```javascript
-router.post('/users/:userId/ban',
+router.post(
+  '/users/:userId/ban',
   authenticate,
   requirePermission(PERMISSIONS.USER_BAN),
   async (req, res) => {
@@ -299,7 +317,8 @@ router.post('/users/:userId/ban',
 ### Example 5: Ownership with Moderator Override
 
 ```javascript
-router.put('/posts/:postId',
+router.put(
+  '/posts/:postId',
   authenticate,
   requireResourceOwnership('post', 'postId', 'authorId', ROLES.MODERATOR),
   async (req, res) => {
@@ -317,7 +336,8 @@ router.put('/posts/:postId',
 ### Example 6: Multiple HTTP Methods with Different Permissions
 
 ```javascript
-router.route('/posts/:postId/comments')
+router
+  .route('/posts/:postId/comments')
   // Anyone can view
   .get(authenticate, handler)
   // Authenticated users can create
@@ -341,6 +361,7 @@ node server/src/__tests__/rbac.test.js
 ### Test Coverage
 
 The test suite covers:
+
 - ✅ Role hierarchy validation
 - ✅ Permission checking for all roles
 - ✅ Permission retrieval
@@ -402,7 +423,8 @@ router.post('/users/:id/ban', authenticate, requireAdmin, handler);
 
 ```javascript
 // ✅ Correct - owner can edit, moderators can edit any
-router.put('/posts/:postId',
+router.put(
+  '/posts/:postId',
   authenticate,
   requireResourceOwnership('post', 'postId', 'authorId', ROLES.MODERATOR),
   handler
@@ -420,7 +442,8 @@ router.put('/posts/:postId',
  * @requires Permission: USER_SUSPEND
  * @access Moderator, Admin
  */
-router.post('/users/:id/suspend',
+router.post(
+  '/users/:id/suspend',
   authenticate,
   requirePermission(PERMISSIONS.USER_SUSPEND),
   handler
@@ -613,10 +636,10 @@ canAccessResource({ id: '123', role: ROLES.MODERATOR }, { userId: '456' }); // t
 
 ```javascript
 // ❌ Wrong - exact role match
-requireRole(ROLES.MODERATOR) // Only MODERATOR, not ADMIN
+requireRole(ROLES.MODERATOR); // Only MODERATOR, not ADMIN
 
 // ✅ Correct - hierarchical
-requireRoleLevel(ROLES.MODERATOR) // MODERATOR and ADMIN
+requireRoleLevel(ROLES.MODERATOR); // MODERATOR and ADMIN
 ```
 
 ---

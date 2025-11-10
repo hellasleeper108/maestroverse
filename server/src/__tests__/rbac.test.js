@@ -170,11 +170,8 @@ describe('RBAC Middleware Tests', () => {
         PERMISSIONS.ADMIN_SETTINGS,
       ];
 
-      criticalPerms.forEach(perm => {
-        assert.ok(
-          adminPerms.includes(perm),
-          `Admin should have ${perm} permission`
-        );
+      criticalPerms.forEach((perm) => {
+        assert.ok(adminPerms.includes(perm), `Admin should have ${perm} permission`);
       });
     });
 
@@ -189,7 +186,7 @@ describe('RBAC Middleware Tests', () => {
         PERMISSIONS.SYSTEM_CONFIG,
       ];
 
-      sensitivePerms.forEach(perm => {
+      sensitivePerms.forEach((perm) => {
         assert.strictEqual(
           studentPerms.includes(perm),
           false,
@@ -235,15 +232,11 @@ describe('RBAC Middleware Tests', () => {
       // Simulate permission check
       const requiredPerms = [PERMISSIONS.USER_BAN];
 
-      const adminHasPerms = requiredPerms.every(perm =>
-        hasPermission(adminUser.role, perm)
-      );
-      const moderatorHasPerms = requiredPerms.every(perm =>
+      const adminHasPerms = requiredPerms.every((perm) => hasPermission(adminUser.role, perm));
+      const moderatorHasPerms = requiredPerms.every((perm) =>
         hasPermission(moderatorUser.role, perm)
       );
-      const studentHasPerms = requiredPerms.every(perm =>
-        hasPermission(studentUser.role, perm)
-      );
+      const studentHasPerms = requiredPerms.every((perm) => hasPermission(studentUser.role, perm));
 
       assert.strictEqual(adminHasPerms, true);
       assert.strictEqual(moderatorHasPerms, false);
@@ -258,17 +251,26 @@ if (import.meta.url === `file://${process.argv[1]}`) {
 
   const tests = [
     { name: 'Role hierarchy', fn: () => hasRoleLevel(ROLES.ADMIN, ROLES.STUDENT) === true },
-    { name: 'Admin permissions', fn: () => hasPermission(ROLES.ADMIN, PERMISSIONS.USER_BAN) === true },
-    { name: 'Moderator permissions', fn: () => hasPermission(ROLES.MODERATOR, PERMISSIONS.USER_SUSPEND) === true },
-    { name: 'Student restrictions', fn: () => hasPermission(ROLES.STUDENT, PERMISSIONS.USER_BAN) === false },
+    {
+      name: 'Admin permissions',
+      fn: () => hasPermission(ROLES.ADMIN, PERMISSIONS.USER_BAN) === true,
+    },
+    {
+      name: 'Moderator permissions',
+      fn: () => hasPermission(ROLES.MODERATOR, PERMISSIONS.USER_SUSPEND) === true,
+    },
+    {
+      name: 'Student restrictions',
+      fn: () => hasPermission(ROLES.STUDENT, PERMISSIONS.USER_BAN) === false,
+    },
     { name: 'Can moderate check', fn: () => canModerate({ role: ROLES.MODERATOR }) === true },
-    { name: 'Is admin check', fn: () => isAdmin({ role: ROLES.ADMIN}) === true },
+    { name: 'Is admin check', fn: () => isAdmin({ role: ROLES.ADMIN }) === true },
   ];
 
   let passed = 0;
   let failed = 0;
 
-  tests.forEach(test => {
+  tests.forEach((test) => {
     try {
       if (test.fn()) {
         console.log(`✓ ${test.name}`);

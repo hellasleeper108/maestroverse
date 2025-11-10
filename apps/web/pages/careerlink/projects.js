@@ -47,7 +47,10 @@ function Projects({ user, setUser }) {
     try {
       const payload = {
         ...formData,
-        technologies: formData.technologies.split(',').map((t) => t.trim()).filter(Boolean),
+        technologies: formData.technologies
+          .split(',')
+          .map((t) => t.trim())
+          .filter(Boolean),
       };
 
       if (editingId) {
@@ -75,7 +78,6 @@ function Projects({ user, setUser }) {
   }
 
   async function handleDelete(id) {
-
     try {
       await careerlink.deleteProject(id);
       await loadProjects();
@@ -106,8 +108,6 @@ function Projects({ user, setUser }) {
     auth.logout();
     setUser(null);
   }
-
-  
 
   return (
     <div className="min-h-screen bg-gray-900">
@@ -264,9 +264,7 @@ function Projects({ user, setUser }) {
               >
                 <div className="p-6">
                   <h3 className="text-white font-semibold text-lg mb-2">{project.title}</h3>
-                  <p className="text-gray-400 text-sm mb-4 line-clamp-3">
-                    {project.description}
-                  </p>
+                  <p className="text-gray-400 text-sm mb-4 line-clamp-3">{project.description}</p>
 
                   <div className="flex flex-wrap gap-2 mb-4">
                     {project.technologies.map((tech, i) => (

@@ -19,10 +19,7 @@ const URL_EXPIRY = {
  * @returns {string} Signed URL token
  */
 export function generateSignedUrl(filename, category, options = {}) {
-  const {
-    expiresIn = URL_EXPIRY.MEDIUM,
-    userId = null,
-  } = options;
+  const { expiresIn = URL_EXPIRY.MEDIUM, userId = null } = options;
 
   // Use JWT for signed URLs with short expiration
   const token = jwt.sign(
@@ -80,7 +77,7 @@ export function createPublicSignedUrl(filename, category, options = {}) {
  * @returns {Array} Array of signed URLs
  */
 export function createBulkSignedUrls(files, options = {}) {
-  return files.map(file => createPublicSignedUrl(file.filename, file.category, options));
+  return files.map((file) => createPublicSignedUrl(file.filename, file.category, options));
 }
 
 /**

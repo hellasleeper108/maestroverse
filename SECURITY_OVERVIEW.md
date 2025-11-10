@@ -68,6 +68,7 @@ Maestroverse implements multiple layers of security controls:
 Maestroverse uses **session-based authentication** with HttpOnly cookies (replacing the previous JWT token approach for enhanced security).
 
 **Files:**
+
 - `/server/src/routes/authSecure.js` - New secure authentication endpoints
 - `/server/src/utils/session.js` - Session management utilities
 - `/server/src/utils/password.js` - Password hashing and validation
@@ -75,6 +76,7 @@ Maestroverse uses **session-based authentication** with HttpOnly cookies (replac
 ### Authentication Flow
 
 #### Registration Flow
+
 ```
 1. Client submits registration form
    ↓
@@ -96,6 +98,7 @@ Maestroverse uses **session-based authentication** with HttpOnly cookies (replac
 ```
 
 #### Login Flow
+
 ```
 1. Client submits credentials (email/username + password)
    ↓
@@ -123,6 +126,7 @@ Maestroverse uses **session-based authentication** with HttpOnly cookies (replac
 ```
 
 #### Logout Flow
+
 ```
 1. Client sends logout request
    ↓
@@ -141,17 +145,17 @@ Maestroverse uses **session-based authentication** with HttpOnly cookies (replac
 
 #### New Secure Endpoints (`/api/auth-secure/*`)
 
-| Method | Endpoint | Description | Rate Limit |
-|--------|----------|-------------|------------|
-| POST | `/register` | Register new user | 3 / 15min |
-| POST | `/login` | Login with credentials | 5 / 5min |
-| POST | `/logout` | Logout and destroy session | None |
-| GET | `/me` | Get current user info | None |
-| GET | `/csrf-token` | Get CSRF token | None |
-| POST | `/verify-email` | Verify email with token | 5 / 10min |
-| POST | `/resend-verification` | Resend verification email | 5 / 10min |
-| POST | `/request-password-reset` | Request password reset | 3 / 15min |
-| POST | `/reset-password` | Reset password with token | None |
+| Method | Endpoint                  | Description                | Rate Limit |
+| ------ | ------------------------- | -------------------------- | ---------- |
+| POST   | `/register`               | Register new user          | 3 / 15min  |
+| POST   | `/login`                  | Login with credentials     | 5 / 5min   |
+| POST   | `/logout`                 | Logout and destroy session | None       |
+| GET    | `/me`                     | Get current user info      | None       |
+| GET    | `/csrf-token`             | Get CSRF token             | None       |
+| POST   | `/verify-email`           | Verify email with token    | 5 / 10min  |
+| POST   | `/resend-verification`    | Resend verification email  | 5 / 10min  |
+| POST   | `/request-password-reset` | Request password reset     | 3 / 15min  |
+| POST   | `/reset-password`         | Reset password with token  | None       |
 
 #### Legacy Endpoints (`/api/auth/*`)
 
@@ -170,12 +174,14 @@ The old JWT-based endpoints remain available for backward compatibility but shou
 Argon2id is the recommended password hashing algorithm (winner of the Password Hashing Competition 2015).
 
 **Why Argon2id?**
+
 - ✅ **Memory-hard**: Resistant to GPU/ASIC attacks
 - ✅ **CPU-hard**: Computationally expensive
 - ✅ **Side-channel resistant**: Protected against timing attacks
 - ✅ **Configurable**: Can increase difficulty as hardware improves
 
 **Parameters (2025 OWASP Baseline):**
+
 ```javascript
 {
   type: argon2id,
@@ -191,11 +197,13 @@ Argon2id is the recommended password hashing algorithm (winner of the Password H
 A pepper is a secret key stored separately from the database. Even if the database is compromised, attackers cannot crack passwords without the pepper.
 
 **Implementation:**
+
 1. Password is peppered using HMAC-SHA256 with `MAESTROVERSE_PEPPER` secret
 2. Peppered password is then hashed with Argon2id
 3. Pepper is stored in environment variable (Docker Secrets in production)
 
 **Storage:**
+
 ```
 Password Flow:
   User Password (plaintext)
@@ -210,6 +218,7 @@ Password Flow:
 ### Password Validation Rules
 
 **Requirements:**
+
 - Length: 12-256 characters (byte length)
 - Strength: zxcvbn score ≥ 3/4 (strong)
 - No null bytes (`\0`)
@@ -217,12 +226,14 @@ Password Flow:
 
 **Feedback:**
 The `validatePassword()` function returns detailed feedback:
+
 - `valid`: Boolean
 - `errors`: Array of error messages
 - `score`: 0-4 strength score
 - `feedback`: Suggestions for improvement
 
 **Example:**
+
 ```javascript
 const result = validatePassword('password123');
 // {
@@ -282,22 +293,26 @@ Sessions are stored in **two locations**:
 ### Session Security Features
 
 #### 1. Session Regeneration
+
 - **When**: On login, privilege escalation
 - **Why**: Prevents session fixation attacks
 - **How**: `regenerateSession(req)` creates new session ID, preserves data
 
 #### 2. Session Fingerprinting
+
 - **What**: SHA256 hash of (User-Agent + IP)
 - **When**: Set on first session creation, verified on each request
 - **Why**: Detects session hijacking
 - **Action**: If fingerprint mismatch → destroy session, require re-login
 
 #### 3. Rolling Expiration
+
 - **What**: Session expiration extends on each request
 - **Why**: Active users stay logged in, inactive sessions expire
 - **Config**: `rolling: true` in session config
 
 #### 4. Session Revocation
+
 ```javascript
 // Revoke single session
 await revokeSession(sessionId, userId);
@@ -312,6 +327,7 @@ const sessions = await getUserSessions(userId);
 ### Middleware
 
 #### `requireAuth`
+
 Requires valid session, returns 401 if not authenticated.
 
 ```javascript
@@ -321,6 +337,7 @@ router.post('/protected-route', requireAuth, async (req, res) => {
 ```
 
 #### `attachUser`
+
 Loads user from session, attaches to `req.user`. Does NOT block if unauthenticated.
 
 ```javascript
@@ -334,6 +351,7 @@ router.get('/optional-auth', attachUser, async (req, res) => {
 ```
 
 #### `requireRole(...roles)`
+
 Requires specific role(s).
 
 ```javascript
@@ -343,6 +361,7 @@ router.delete('/admin/users/:id', requireRole('ADMIN'), async (req, res) => {
 ```
 
 #### `verifySessionFingerprint`
+
 Checks session fingerprint, destroys session if mismatch.
 
 ```javascript
@@ -360,21 +379,23 @@ app.use(verifySessionFingerprint);
 
 ### Rate Limit Configurations
 
-| Action | Max Attempts | Window | Backoff |
-|--------|-------------|--------|---------|
-| Login | 5 | 5 min | Exponential |
-| Registration | 3 | 15 min | Exponential |
-| Password Reset | 3 | 15 min | Exponential |
-| Email Verification | 5 | 10 min | None |
-| API (general) | 100 | 1 min | None |
+| Action             | Max Attempts | Window | Backoff     |
+| ------------------ | ------------ | ------ | ----------- |
+| Login              | 5            | 5 min  | Exponential |
+| Registration       | 3            | 15 min | Exponential |
+| Password Reset     | 3            | 15 min | Exponential |
+| Email Verification | 5            | 10 min | None        |
+| API (general)      | 100          | 1 min  | None        |
 
 ### Tracking Strategy
 
 Rate limits are tracked by:
+
 - **IP Address**: For unauthenticated requests
 - **User ID**: For authenticated requests (optional)
 
 **Database Model:** `RateLimitRecord`
+
 ```prisma
 model RateLimitRecord {
   id         String   @unique([identifier, action])
@@ -399,6 +420,7 @@ Max: 120 minutes (2 hours)
 ```
 
 **Example:**
+
 1. User fails login 5 times → Blocked for 5 minutes
 2. After 5 min, user tries again and fails → Blocked for 10 minutes
 3. Pattern continues with doubling backoff
@@ -465,6 +487,7 @@ await cleanupExpiredRateLimits();
 ```
 
 **Note:** `__Host-` prefix enforces:
+
 - `secure: true`
 - `path: '/'`
 - No `domain` attribute
@@ -472,12 +495,14 @@ await cleanupExpiredRateLimits();
 ### Protected Methods
 
 CSRF protection applies to:
+
 - POST
 - PUT
 - PATCH
 - DELETE
 
 **Exempt methods:**
+
 - GET
 - HEAD
 - OPTIONS
@@ -486,7 +511,7 @@ CSRF protection applies to:
 
 ```javascript
 // 1. Get CSRF token on app load
-const { csrfToken } = await fetch('/api/auth-secure/csrf-token').then(r => r.json());
+const { csrfToken } = await fetch('/api/auth-secure/csrf-token').then((r) => r.json());
 
 // 2. Include in state-changing requests
 await fetch('/api/auth-secure/logout', {
@@ -495,7 +520,7 @@ await fetch('/api/auth-secure/logout', {
     'X-CSRF-Token': csrfToken,
     'Content-Type': 'application/json',
   },
-  credentials: 'include',  // Important: send cookies
+  credentials: 'include', // Important: send cookies
 });
 ```
 
@@ -521,17 +546,17 @@ app.use('/api', csrfProtect);
 
 ### Applied Headers
 
-| Header | Value | Purpose |
-|--------|-------|---------|
-| `Strict-Transport-Security` | `max-age=31536000; includeSubDomains; preload` | Force HTTPS |
-| `Content-Security-Policy` | See CSP section | Prevent XSS |
-| `X-Content-Type-Options` | `nosniff` | Prevent MIME sniffing |
-| `X-Frame-Options` | `DENY` | Prevent clickjacking |
-| `Referrer-Policy` | `strict-origin-when-cross-origin` | Control referrer |
-| `Permissions-Policy` | Restrictive | Block unnecessary APIs |
-| `X-XSS-Protection` | `1; mode=block` | Legacy XSS protection |
-| `Cross-Origin-Opener-Policy` | `same-origin` | Isolate browsing context |
-| `Cross-Origin-Resource-Policy` | `same-origin` | Prevent resource leaks |
+| Header                         | Value                                          | Purpose                  |
+| ------------------------------ | ---------------------------------------------- | ------------------------ |
+| `Strict-Transport-Security`    | `max-age=31536000; includeSubDomains; preload` | Force HTTPS              |
+| `Content-Security-Policy`      | See CSP section                                | Prevent XSS              |
+| `X-Content-Type-Options`       | `nosniff`                                      | Prevent MIME sniffing    |
+| `X-Frame-Options`              | `DENY`                                         | Prevent clickjacking     |
+| `Referrer-Policy`              | `strict-origin-when-cross-origin`              | Control referrer         |
+| `Permissions-Policy`           | Restrictive                                    | Block unnecessary APIs   |
+| `X-XSS-Protection`             | `1; mode=block`                                | Legacy XSS protection    |
+| `Cross-Origin-Opener-Policy`   | `same-origin`                                  | Isolate browsing context |
+| `Cross-Origin-Resource-Policy` | `same-origin`                                  | Prevent resource leaks   |
 
 ### Content Security Policy (CSP)
 
@@ -585,23 +610,37 @@ All security-relevant actions are logged:
 ```javascript
 AUDIT_ACTIONS = {
   // Authentication
-  LOGIN_SUCCESS, LOGIN_FAILED, LOGOUT, REGISTER,
+  LOGIN_SUCCESS,
+  LOGIN_FAILED,
+  LOGOUT,
+  REGISTER,
 
   // Password
-  PASSWORD_CHANGE, PASSWORD_RESET_REQUEST, PASSWORD_RESET_COMPLETE,
+  PASSWORD_CHANGE,
+  PASSWORD_RESET_REQUEST,
+  PASSWORD_RESET_COMPLETE,
 
   // Verification
-  EMAIL_VERIFICATION_SENT, EMAIL_VERIFIED,
+  EMAIL_VERIFICATION_SENT,
+  EMAIL_VERIFIED,
 
   // MFA
-  MFA_ENABLED, MFA_DISABLED, MFA_CHALLENGE_SUCCESS, MFA_CHALLENGE_FAILED,
+  MFA_ENABLED,
+  MFA_DISABLED,
+  MFA_CHALLENGE_SUCCESS,
+  MFA_CHALLENGE_FAILED,
 
   // Security
-  ACCOUNT_LOCKED, ACCOUNT_SUSPENDED, ACCOUNT_BANNED, SUSPICIOUS_ACTIVITY,
+  ACCOUNT_LOCKED,
+  ACCOUNT_SUSPENDED,
+  ACCOUNT_BANNED,
+  SUSPICIOUS_ACTIVITY,
 
   // Sessions
-  SESSION_CREATED, SESSION_DESTROYED, SESSION_EXPIRED,
-}
+  SESSION_CREATED,
+  SESSION_DESTROYED,
+  SESSION_EXPIRED,
+};
 ```
 
 ### Log Structure
@@ -643,7 +682,7 @@ await logAudit({
   req,
   success: false,
   errorMessage: 'Invalid credentials',
-  metadata: { emailOrUsername: 'user@example.com' }
+  metadata: { emailOrUsername: 'user@example.com' },
 });
 ```
 
@@ -654,16 +693,16 @@ await logAudit({
 const failedLogins = await prisma.auditLog.findMany({
   where: {
     action: 'LOGIN_FAILED',
-    createdAt: { gte: new Date(Date.now() - 24 * 60 * 60 * 1000) }
+    createdAt: { gte: new Date(Date.now() - 24 * 60 * 60 * 1000) },
   },
-  orderBy: { createdAt: 'desc' }
+  orderBy: { createdAt: 'desc' },
 });
 
 // Get user activity
 const userActivity = await prisma.auditLog.findMany({
   where: { userId: 'user123' },
   orderBy: { createdAt: 'desc' },
-  take: 50
+  take: 50,
 });
 ```
 
@@ -676,6 +715,7 @@ const userActivity = await prisma.auditLog.findMany({
 **File:** `/server/src/utils/email.js`
 
 #### On Registration
+
 1. User registers → `isVerified: false`
 2. Generate 32-byte secure random token
 3. Store in `VerificationToken` table (expires in 24 hours)
@@ -685,6 +725,7 @@ const userActivity = await prisma.auditLog.findMany({
 7. Token marked as used
 
 #### Resending Verification
+
 - Authenticated users can request resend
 - Old unused tokens are deleted
 - New 24-hour token generated
@@ -693,6 +734,7 @@ const userActivity = await prisma.auditLog.findMany({
 ### Password Reset Flow
 
 #### Request Reset
+
 1. User submits email
 2. Always return success (prevent user enumeration)
 3. If user exists:
@@ -702,6 +744,7 @@ const userActivity = await prisma.auditLog.findMany({
 4. Rate limited: 3 attempts / 15 minutes
 
 #### Reset Password
+
 1. User clicks reset link with token
 2. Validates token (not expired, not used)
 3. User enters new password
@@ -714,12 +757,14 @@ const userActivity = await prisma.auditLog.findMany({
 ### Email Templates
 
 Professional HTML templates with:
+
 - Responsive design (mobile-friendly)
 - Branded styling (Maestroverse colors)
 - Security warnings
 - Plain text fallback
 
 **Templates:**
+
 - Verification email (`sendVerificationEmail`)
 - Password reset email (`sendPasswordResetEmail`)
 - Security alert email (`sendSecurityAlert`)
@@ -869,9 +914,7 @@ function getPepper() {
 ```javascript
 // Enable query logging in development only
 const prisma = new PrismaClient({
-  log: process.env.NODE_ENV === 'development'
-    ? ['query', 'error', 'warn']
-    : ['error']
+  log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
 });
 ```
 
@@ -880,11 +923,13 @@ const prisma = new PrismaClient({
 Prisma ORM provides automatic SQL injection protection through parameterized queries. **Never** use raw SQL unless absolutely necessary.
 
 **Safe:**
+
 ```javascript
 await prisma.user.findUnique({ where: { email } });
 ```
 
 **Unsafe (avoid):**
+
 ```javascript
 await prisma.$queryRaw`SELECT * FROM users WHERE email = ${email}`; // Still safe (parameterized)
 await prisma.$executeRawUnsafe(`SELECT * FROM users WHERE email = '${email}'`); // UNSAFE
@@ -909,7 +954,7 @@ function encrypt(text) {
   return JSON.stringify({
     iv: iv.toString('hex'),
     data: encrypted.toString('hex'),
-    tag: authTag.toString('hex')
+    tag: authTag.toString('hex'),
   });
 }
 ```
@@ -1017,11 +1062,13 @@ function encrypt(text) {
 ### Security Incident Procedure
 
 #### 1. Detection
+
 - Monitor audit logs for suspicious patterns
 - Watch for rate limit violations
 - Alert on authentication failures
 
 #### 2. Containment
+
 ```bash
 # Immediately ban compromised accounts
 await prisma.user.update({
@@ -1036,29 +1083,32 @@ await revokeAllUserSessions(userId);
 ```
 
 #### 3. Investigation
+
 ```javascript
 // Review audit logs
 const logs = await prisma.auditLog.findMany({
   where: {
     userId,
-    createdAt: { gte: suspiciousDate }
+    createdAt: { gte: suspiciousDate },
   },
-  orderBy: { createdAt: 'asc' }
+  orderBy: { createdAt: 'asc' },
 });
 
 // Check session history
 const sessions = await prisma.session.findMany({
-  where: { userId }
+  where: { userId },
 });
 ```
 
 #### 4. Recovery
+
 - Force password reset for affected users
 - Notify users of security incident
 - Rotate secrets if compromised
 - Apply patches/fixes
 
 #### 5. Post-Incident
+
 - Document incident in security log
 - Update security procedures
 - Implement additional controls if needed

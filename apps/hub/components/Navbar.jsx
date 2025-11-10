@@ -123,7 +123,9 @@ function Navbar({ currentModule, user, onLogout }) {
                 placeholder="Search..."
                 className="bg-gray-800/70 text-gray-100 placeholder:text-gray-500 px-4 py-2 rounded-lg border border-cyber-border focus:outline-none focus:ring-2 focus:ring-cyan-400/80 focus:border-cyber-blue w-64 transition"
               />
-              <span className="absolute right-3 top-2.5 text-gray-400 drop-shadow-glow-blue">🔍</span>
+              <span className="absolute right-3 top-2.5 text-gray-400 drop-shadow-glow-blue">
+                🔍
+              </span>
             </div>
 
             {/* Notifications */}
@@ -143,7 +145,9 @@ function Navbar({ currentModule, user, onLogout }) {
               {showNotifications && (
                 <div className="absolute right-0 mt-2 w-96 bg-cyber-surface/95 rounded-xl shadow-glow-blue border border-cyber-border overflow-hidden z-50">
                   <div className="px-4 py-3 border-b border-cyber-border/60 flex items-center justify-between">
-                    <h3 className="text-white font-semibold drop-shadow-glow-blue">Notifications</h3>
+                    <h3 className="text-white font-semibold drop-shadow-glow-blue">
+                      Notifications
+                    </h3>
                     {unreadCount > 0 && (
                       <button
                         onClick={handleMarkAllAsRead}

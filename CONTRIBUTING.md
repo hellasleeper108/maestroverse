@@ -121,6 +121,7 @@ npm run docker:stop
 ```
 
 **Services will be available at:**
+
 - **Web Frontend**: http://localhost:3005
 - **API Server**: http://localhost:3001
 - **PostgreSQL**: localhost:5432
@@ -140,6 +141,7 @@ npm run db:studio
 ```
 
 **Demo Credentials:**
+
 - Admin: `admin@maestro.edu` / `password123`
 - Moderator: `moderator@maestro.edu` / `password123`
 - Faculty: `faculty@maestro.edu` / `password123`
@@ -343,7 +345,8 @@ router.get('/api/users/:id', authenticate, async (req, res) => {
 
 ```javascript
 // ✅ Good: Authentication and authorization via middleware
-router.post('/api/admin/users/:id/ban',
+router.post(
+  '/api/admin/users/:id/ban',
   authenticate,
   requirePermission(PERMISSIONS.USER_BAN),
   async (req, res) => {
@@ -416,6 +419,7 @@ We follow the [Conventional Commits](https://www.conventionalcommits.org/) speci
 ```
 
 **Types:**
+
 - `feat`: New feature
 - `fix`: Bug fix
 - `docs`: Documentation changes
@@ -480,17 +484,20 @@ git commit -m "Add auth, fix bugs, update docs"
 ### Before Submitting
 
 1. **Create a feature branch** from `main`:
+
    ```bash
    git checkout -b feature/your-feature-name
    ```
 
 2. **Keep your branch up to date** with main:
+
    ```bash
    git fetch upstream
    git rebase upstream/main
    ```
 
 3. **Run all checks**:
+
    ```bash
    npm run lint          # ESLint
    npm run format        # Prettier
@@ -505,6 +512,7 @@ git commit -m "Add auth, fix bugs, update docs"
 ### Creating the Pull Request
 
 1. **Push your branch** to your fork:
+
    ```bash
    git push origin feature/your-feature-name
    ```
@@ -518,6 +526,7 @@ git commit -m "Add auth, fix bugs, update docs"
 ### Pull Request Requirements
 
 ✅ **Required:**
+
 - [ ] All tests pass
 - [ ] Code follows style guidelines (ESLint + Prettier)
 - [ ] Commit messages follow conventional format
@@ -526,10 +535,12 @@ git commit -m "Add auth, fix bugs, update docs"
 - [ ] Breaking changes documented
 
 ✅ **For Features:**
+
 - [ ] New tests added
 - [ ] User-facing changes documented
 
 ✅ **For Bug Fixes:**
+
 - [ ] Root cause identified
 - [ ] Test added to prevent regression
 
@@ -544,6 +555,7 @@ git commit -m "Add auth, fix bugs, update docs"
 ### After Your Pull Request is Merged
 
 1. **Delete your feature branch**:
+
    ```bash
    git branch -d feature/your-feature-name
    git push origin --delete feature/your-feature-name
@@ -566,11 +578,13 @@ Maestroverse uses GitHub Actions for automated testing, linting, and security ch
 Runs on every pull request and push to `main`/`develop` branches:
 
 **Lint Job:**
+
 - Runs ESLint to check code quality
 - Verifies Prettier formatting
 - **Fails if linting errors found**
 
 **Test Job:**
+
 - Sets up PostgreSQL and Redis services
 - Generates Prisma client
 - Runs database migrations
@@ -578,11 +592,13 @@ Runs on every pull request and push to `main`/`develop` branches:
 - **Fails if any tests fail**
 
 **Build Job:**
+
 - Builds server application
 - Builds web frontend
 - **Fails if build errors occur**
 
 **Security Job:**
+
 - Runs `npm audit` to check for vulnerabilities
 - Scans for accidentally committed secrets
 - Provides warnings for security issues
@@ -597,19 +613,23 @@ Runs on every pull request and push to `main`/`develop` branches:
 #### 3. **PR Validation Checks** (`pr-checks.yml`)
 
 **PR Title Check:**
+
 - Validates PR title follows Conventional Commits format
 - Ensures title starts with type: `feat`, `fix`, `docs`, etc.
 - Subject must start with uppercase letter
 
 **PR Size Check:**
+
 - Warns if PR has >1000 changes
 - **Fails if PR has >2000 changes** (break into smaller PRs)
 
 **PR Labels Check:**
+
 - Warns if PR has no labels
 - Encourages appropriate labeling
 
 **PR Checklist Check:**
+
 - Verifies PR description includes security checklist
 - Counts completed checklist items
 - Warns if checklist is incomplete
@@ -652,6 +672,7 @@ npm test
 ```
 
 **Fix:**
+
 ```bash
 npm run lint -- --fix  # Auto-fix issues
 npm run format        # Format code
@@ -666,6 +687,7 @@ npm run format        # Format code
 ```
 
 **Fix:**
+
 - Review test output for specific failures
 - Fix the failing tests or update implementation
 - Run `npm test` locally to verify fixes
@@ -678,6 +700,7 @@ npm run format        # Format code
 ```
 
 **Fix:**
+
 ```bash
 npm install missing-package  # Install missing dependency
 npm run build                # Verify build succeeds
@@ -691,6 +714,7 @@ npm run build                # Verify build succeeds
 ```
 
 **Fix:**
+
 - Update PR title to format: `type(scope): description`
 - Example: `feat(auth): add OAuth2 support`
 
@@ -714,6 +738,7 @@ The following checks **must pass** before merging:
 5. ✅ **PR Size**: Not excessively large
 
 **Optional but recommended:**
+
 - CodeQL Security Analysis
 - npm audit (vulnerabilities check)
 - Secret scanning
@@ -768,6 +793,7 @@ npm run build --workspace=apps/web
 - **Total CI time**: ~10-15 minutes
 
 Tips to reduce CI time:
+
 - Keep PRs focused and small
 - Run tests locally before pushing
 - Fix linting issues before pushing
@@ -814,7 +840,11 @@ import { z } from 'zod';
 const userSchema = z.object({
   email: z.string().email(),
   password: z.string().min(8).max(100),
-  username: z.string().min(3).max(30).regex(/^[a-zA-Z0-9_]+$/),
+  username: z
+    .string()
+    .min(3)
+    .max(30)
+    .regex(/^[a-zA-Z0-9_]+$/),
 });
 
 const data = userSchema.parse(req.body);
@@ -864,13 +894,9 @@ router.get('/api/users/profile', authenticate, async (req, res) => {
 });
 
 // ✅ Check authorization for sensitive operations
-router.delete('/api/admin/users/:id',
-  authenticate,
-  requireAdmin,
-  async (req, res) => {
-    // Only admins can reach here
-  }
-);
+router.delete('/api/admin/users/:id', authenticate, requireAdmin, async (req, res) => {
+  // Only admins can reach here
+});
 ```
 
 ### 7. Rate Limiting
@@ -893,7 +919,8 @@ router.post('/api/auth/login', loginLimiter, loginHandler);
 // ✅ Validate file types and sizes
 import { imageUploadMiddleware } from '../middleware/fileUpload.js';
 
-router.post('/upload',
+router.post(
+  '/upload',
   authenticate,
   imageUploadMiddleware, // Handles validation
   async (req, res) => {
@@ -907,6 +934,7 @@ router.post('/upload',
 **DO NOT** create a public GitHub issue for security vulnerabilities.
 
 Instead:
+
 1. Email security concerns to: security@maestroverse.edu
 2. Provide detailed description and reproduction steps
 3. Allow time for patching before public disclosure
@@ -992,12 +1020,10 @@ describe('LoginButton', () => {
 // Test API endpoints end-to-end
 describe('POST /api/auth/login', () => {
   it('should login with valid credentials', async () => {
-    const response = await request(app)
-      .post('/api/auth/login')
-      .send({
-        email: 'alice@maestro.edu',
-        password: 'password123',
-      });
+    const response = await request(app).post('/api/auth/login').send({
+      email: 'alice@maestro.edu',
+      password: 'password123',
+    });
 
     expect(response.status).toBe(200);
     expect(response.body).toHaveProperty('token');
@@ -1005,12 +1031,10 @@ describe('POST /api/auth/login', () => {
   });
 
   it('should reject invalid credentials', async () => {
-    const response = await request(app)
-      .post('/api/auth/login')
-      .send({
-        email: 'alice@maestro.edu',
-        password: 'wrongpassword',
-      });
+    const response = await request(app).post('/api/auth/login').send({
+      email: 'alice@maestro.edu',
+      password: 'wrongpassword',
+    });
 
     expect(response.status).toBe(401);
     expect(response.body.error).toBe('Invalid credentials');

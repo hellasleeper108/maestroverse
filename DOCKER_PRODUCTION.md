@@ -27,11 +27,11 @@ The production Docker configuration includes:
 
 ### Image Size Comparison
 
-| Image Type | Size | Description |
-|------------|------|-------------|
-| Development (node:18) | ~900MB | Full Node.js with build tools |
-| Production (Alpine) | ~150MB | Minimal Alpine with runtime only |
-| **Reduction** | **83%** | **~750MB savings per image** |
+| Image Type            | Size    | Description                      |
+| --------------------- | ------- | -------------------------------- |
+| Development (node:18) | ~900MB  | Full Node.js with build tools    |
+| Production (Alpine)   | ~150MB  | Minimal Alpine with runtime only |
+| **Reduction**         | **83%** | **~750MB savings per image**     |
 
 ## 🔒 Security Improvements
 
@@ -54,6 +54,7 @@ USER maestro
 ```
 
 **Benefits:**
+
 - ✅ Limits damage from container breakout attacks
 - ✅ Principle of least privilege
 - ✅ Compliance with security standards (PCI-DSS, SOC 2)
@@ -69,10 +70,11 @@ services:
   server:
     read_only: true
     tmpfs:
-      - /tmp  # Allow writes to /tmp only
+      - /tmp # Allow writes to /tmp only
 ```
 
 **Benefits:**
+
 - ✅ Prevents file modification attacks
 - ✅ Forces immutable infrastructure
 - ✅ Easier to detect compromise
@@ -89,6 +91,7 @@ node:18-alpine     - 150MB - Only essential packages
 ```
 
 **Benefits:**
+
 - ✅ 83% smaller image size
 - ✅ Fewer CVEs to patch
 - ✅ Faster downloads and deployments
@@ -109,6 +112,7 @@ ENV JWT_SECRET=${JWT_SECRET}
 ```
 
 **Best Practices:**
+
 - Use environment variables
 - Use Docker secrets (Swarm mode)
 - Use external secret managers (Vault, AWS Secrets Manager)
@@ -124,14 +128,15 @@ ENV JWT_SECRET=${JWT_SECRET}
 deploy:
   resources:
     limits:
-      cpus: '2.0'      # Max 2 CPU cores
-      memory: 2G       # Max 2GB RAM
+      cpus: '2.0' # Max 2 CPU cores
+      memory: 2G # Max 2GB RAM
     reservations:
-      cpus: '0.5'      # Guaranteed 0.5 CPU
-      memory: 512M     # Guaranteed 512MB RAM
+      cpus: '0.5' # Guaranteed 0.5 CPU
+      memory: 512M # Guaranteed 512MB RAM
 ```
 
 **Benefits:**
+
 - ✅ Prevents resource exhaustion
 - ✅ Predictable performance
 - ✅ Better multi-tenant isolation
@@ -145,12 +150,13 @@ deploy:
 ```yaml
 networks:
   maestro-internal:
-    internal: true  # No external access
+    internal: true # No external access
   maestro-external:
     # Accessible from outside
 ```
 
 **Result:**
+
 - Database and Redis only accessible internally
 - Web and API exposed externally
 - Even if API is compromised, database is isolated
@@ -203,12 +209,12 @@ CMD ["node", "dist/index.js"]
 
 ### Benefits of Multi-Stage Builds
 
-| Metric | Single-Stage | Multi-Stage | Improvement |
-|--------|--------------|-------------|-------------|
-| Image Size | 1.2GB | 150MB | **87% smaller** |
-| Security | Low | High | **No build tools** |
-| Dependencies | All | Production only | **Fewer packages** |
-| Attack Surface | Large | Minimal | **Less vulnerable** |
+| Metric         | Single-Stage | Multi-Stage     | Improvement         |
+| -------------- | ------------ | --------------- | ------------------- |
+| Image Size     | 1.2GB        | 150MB           | **87% smaller**     |
+| Security       | Low          | High            | **No build tools**  |
+| Dependencies   | All          | Production only | **Fewer packages**  |
+| Attack Surface | Large        | Minimal         | **Less vulnerable** |
 
 ## 📦 Image Optimization
 
@@ -495,6 +501,7 @@ docker-compose -f docker-compose.prod.yml logs server
 ```
 
 **Solution:**
+
 1. Verify .env.production has all required variables
 2. Check database is healthy: `docker-compose ps`
 3. Check port availability: `lsof -i :3001`
@@ -526,6 +533,7 @@ docker-compose -f docker-compose.prod.yml exec server \
 ```
 
 **Solution:**
+
 - Increase `start_period` in health check if application takes longer to start
 - Check application logs for startup errors
 
@@ -551,6 +559,7 @@ deploy:
 **Cause:** Database not ready or network issue.
 
 **Solution:**
+
 1. Verify database is healthy: `docker-compose ps postgres`
 2. Check network: `docker network inspect maestro-internal`
 3. Verify DATABASE_URL in .env.production

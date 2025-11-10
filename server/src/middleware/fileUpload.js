@@ -103,10 +103,7 @@ export async function ensureUploadDirectories() {
  * @returns {Object} Validation result { valid: boolean, error?: string }
  */
 export function validateFile(file, options = {}) {
-  const {
-    allowedTypes = Object.keys(ALLOWED_MIMETYPES),
-    maxSize = MAX_FILE_SIZE,
-  } = options;
+  const { allowedTypes = Object.keys(ALLOWED_MIMETYPES), maxSize = MAX_FILE_SIZE } = options;
 
   // Check if file exists
   if (!file) {
@@ -201,12 +198,7 @@ export async function deleteUploadedFile(filename, category = 'documents') {
  * Usage: router.post('/upload', fileUploadMiddleware({ category: 'photos', allowedTypes: ['image/jpeg', 'image/png'] }), handler)
  */
 export function fileUploadMiddleware(options = {}) {
-  const {
-    fieldName = 'file',
-    category = 'documents',
-    allowedTypes,
-    maxSize,
-  } = options;
+  const { fieldName = 'file', category = 'documents', allowedTypes, maxSize } = options;
 
   return async (req, res, next) => {
     try {

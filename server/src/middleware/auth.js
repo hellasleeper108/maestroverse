@@ -107,7 +107,11 @@ export const optionalAuth = async (req, res, next) => {
             return next();
           }
 
-          if (user.status === 'SUSPENDED' && user.suspendedUntil && user.suspendedUntil > new Date()) {
+          if (
+            user.status === 'SUSPENDED' &&
+            user.suspendedUntil &&
+            user.suspendedUntil > new Date()
+          ) {
             return next();
           }
 

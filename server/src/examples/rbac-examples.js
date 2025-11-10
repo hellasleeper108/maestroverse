@@ -64,12 +64,17 @@ router.get('/moderation/reports', authenticate, requireModerator, (req, res) => 
 /**
  * Using requireRoleLevel - allows MODERATOR and above (including ADMIN)
  */
-router.delete('/posts/:postId/moderate', authenticate, requireRoleLevel(ROLES.MODERATOR), (req, res) => {
-  res.json({
-    message: 'Post removed by moderator',
-    postId: req.params.postId,
-  });
-});
+router.delete(
+  '/posts/:postId/moderate',
+  authenticate,
+  requireRoleLevel(ROLES.MODERATOR),
+  (req, res) => {
+    res.json({
+      message: 'Post removed by moderator',
+      postId: req.params.postId,
+    });
+  }
+);
 
 // ============================================================================
 // EXAMPLE 3: Faculty or Higher Routes
@@ -89,12 +94,17 @@ router.post('/courses/create', authenticate, requireFaculty, (req, res) => {
 /**
  * Specific faculty-only feature
  */
-router.post('/courses/:courseId/grade', authenticate, requireRole(ROLES.FACULTY, ROLES.ADMIN), (req, res) => {
-  res.json({
-    message: 'Grades submitted',
-    courseId: req.params.courseId,
-  });
-});
+router.post(
+  '/courses/:courseId/grade',
+  authenticate,
+  requireRole(ROLES.FACULTY, ROLES.ADMIN),
+  (req, res) => {
+    res.json({
+      message: 'Grades submitted',
+      courseId: req.params.courseId,
+    });
+  }
+);
 
 // ============================================================================
 // EXAMPLE 4: Permission-Based Routes
@@ -104,12 +114,17 @@ router.post('/courses/:courseId/grade', authenticate, requireRole(ROLES.FACULTY,
  * Check for specific permission
  * More granular than role checking
  */
-router.post('/users/:userId/ban', authenticate, requirePermission(PERMISSIONS.USER_BAN), (req, res) => {
-  res.json({
-    message: 'User banned',
-    userId: req.params.userId,
-  });
-});
+router.post(
+  '/users/:userId/ban',
+  authenticate,
+  requirePermission(PERMISSIONS.USER_BAN),
+  (req, res) => {
+    res.json({
+      message: 'User banned',
+      userId: req.params.userId,
+    });
+  }
+);
 
 /**
  * Multiple permissions required
@@ -205,12 +220,17 @@ router.post('/groups/:groupId/join', authenticate, async (req, res, next) => {
  * Allow multiple specific roles (not hierarchical)
  * FACULTY and MODERATOR can access, but not ADMIN
  */
-router.get('/reports/teaching', authenticate, requireRole(ROLES.FACULTY, ROLES.MODERATOR), (req, res) => {
-  res.json({
-    message: 'Teaching reports',
-    role: req.user.role,
-  });
-});
+router.get(
+  '/reports/teaching',
+  authenticate,
+  requireRole(ROLES.FACULTY, ROLES.MODERATOR),
+  (req, res) => {
+    res.json({
+      message: 'Teaching reports',
+      role: req.user.role,
+    });
+  }
+);
 
 // ============================================================================
 // EXAMPLE 8: Conditional Authorization

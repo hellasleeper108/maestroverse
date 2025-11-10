@@ -1,20 +1,18 @@
 ## 📋 Pull Request Description
 
 ### What does this PR do?
+
 <!-- Provide a clear, concise description of the changes -->
 
-
-
 ### Why is this change needed?
+
 <!-- Explain the motivation behind this PR -->
 
-
-
 ### Related Issues
+
 <!-- Link related issues using "Closes #123" or "Fixes #456" -->
 
 Closes #
-
 
 ## 🔍 Type of Change
 
@@ -34,8 +32,6 @@ Closes #
 ## 📸 Screenshots/Videos (if applicable)
 
 <!-- Add screenshots or screen recordings for UI changes -->
-
-
 
 ## 🧪 Testing
 
@@ -97,14 +93,17 @@ Closes #
 <!-- Answer these questions -->
 
 **Does this PR handle sensitive data?** (passwords, tokens, PII)
+
 - [ ] Yes → Describe security measures:
 - [ ] No
 
 **Does this PR modify authentication/authorization logic?**
+
 - [ ] Yes → Describe changes and testing:
 - [ ] No
 
 **Could this PR introduce a security vulnerability?**
+
 - [ ] Yes → Explain mitigation:
 - [ ] No → Explain why:
 
@@ -191,11 +190,13 @@ npm run db:migrate
 <!-- List any new or changed environment variables -->
 
 **New variables:**
+
 ```bash
 # None
 ```
 
 **Changed variables:**
+
 ```bash
 # None
 ```
@@ -239,7 +240,7 @@ npm run db:migrate
 - [ ] New dependencies added (list below):
 
 | Package | Version | Purpose | Justification |
-|---------|---------|---------|---------------|
+| ------- | ------- | ------- | ------------- |
 |         |         |         |               |
 
 ### Dependency Security
@@ -258,8 +259,6 @@ npm run db:migrate
 ### Breaking Change Details
 
 <!-- Describe what breaks and why -->
-
-
 
 ### Migration Guide
 
@@ -281,8 +280,6 @@ npm run db:migrate
 ## 📝 Additional Notes
 
 <!-- Any additional information reviewers should know -->
-
-
 
 ## 👥 Reviewers
 
@@ -308,5 +305,3 @@ npm run db:migrate
 ### Review Notes
 
 <!-- Reviewer comments -->
-
-

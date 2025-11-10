@@ -52,11 +52,12 @@ function getIdentifier(req, useUserId = false) {
   }
 
   // Extract IP from various possible headers (for proxy/load balancer scenarios)
-  const ip = req.ip
-    || req.headers['x-forwarded-for']?.split(',')[0]?.trim()
-    || req.headers['x-real-ip']
-    || req.connection?.remoteAddress
-    || 'unknown';
+  const ip =
+    req.ip ||
+    req.headers['x-forwarded-for']?.split(',')[0]?.trim() ||
+    req.headers['x-real-ip'] ||
+    req.connection?.remoteAddress ||
+    'unknown';
 
   return `ip:${ip}`;
 }
@@ -174,7 +175,6 @@ async function checkRateLimit(identifier, action, config) {
       remaining: config.maxAttempts - (record.attempts + 1),
       resetAt: record.resetAt,
     };
-
   } catch (error) {
     console.error('[RATE_LIMIT] Database error:', error);
     // On database errors, fail open (allow request) to prevent DoS
@@ -290,15 +290,13 @@ export function adaptiveRateLimiter(action) {
     // Store original res.json to intercept response
     const originalJson = res.json.bind(res);
 
-    res.json = function(data) {
+    res.json = function (data) {
       // Only track failed attempts (status 401, 403, or explicit error)
-      const isFailed = res.statusCode === 401
-        || res.statusCode === 403
-        || (data && data.error);
+      const isFailed = res.statusCode === 401 || res.statusCode === 403 || (data && data.error);
 
       if (isFailed) {
         // Async tracking (don't await)
-        checkRateLimit(identifier, action, config).catch(err => {
+        checkRateLimit(identifier, action, config).catch((err) => {
           console.error('[RATE_LIMIT] Async tracking error:', err);
         });
       }
