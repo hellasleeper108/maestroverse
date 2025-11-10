@@ -1,11 +1,9 @@
 import express from 'express';
 import { PrismaClient } from '@prisma/client';
 import { z } from 'zod';
-import { authenticate, authorize } from '../middleware/auth.js';
+import { authenticate } from '../middleware/auth.js';
 import {
-  ROLES,
   PERMISSIONS,
-  requireAdmin,
   requireModerator,
   requirePermission,
 } from '../middleware/rbac.js';

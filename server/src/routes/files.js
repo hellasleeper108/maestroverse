@@ -1,5 +1,5 @@
 import express from 'express';
-import { authenticate, optionalAuth } from '../middleware/auth.js';
+import { authenticate } from '../middleware/auth.js';
 import { serveSignedFile, servePrivateFile } from '../utils/signedUrls.js';
 
 const router = express.Router();

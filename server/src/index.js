@@ -36,6 +36,7 @@ import { ensureUploadDirectories } from './middleware/fileUpload.js';
 dotenv.config();
 
 const __filename = fileURLToPath(import.meta.url);
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const __dirname = path.dirname(__filename);
 
 const app = express();

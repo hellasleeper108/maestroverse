@@ -15,7 +15,7 @@ export async function getServerSideProps() {
   };
 }
 
-export default function MIM({ user, setUser }) {
+export default function MIM({ user, setUser: _setUser }) {
   const router = useRouter();
   const [rooms, setRooms] = useState([]);
   const [currentRoom, setCurrentRoom] = useState(null);
@@ -126,7 +126,7 @@ export default function MIM({ user, setUser }) {
       setUsersInRoom(prev => prev.filter(u => u.id !== userId));
     });
 
-    newSocket.on('chatroom:typing', ({ userId, firstName, isTyping }) => {
+    newSocket.on('chatroom:typing', ({ userId: _userId, firstName, isTyping }) => {
       setTypingUsers(prev => {
         const newSet = new Set(prev);
         if (isTyping) {

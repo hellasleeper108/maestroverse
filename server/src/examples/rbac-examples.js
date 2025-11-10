@@ -6,6 +6,7 @@
  */
 
 import express from 'express';
+import { PrismaClient } from '@prisma/client';
 import { authenticate } from '../middleware/auth.js';
 import {
   ROLES,
@@ -21,6 +22,7 @@ import {
 } from '../middleware/rbac.js';
 
 const router = express.Router();
+const prisma = new PrismaClient();
 
 // ============================================================================
 // EXAMPLE 1: Admin-Only Routes

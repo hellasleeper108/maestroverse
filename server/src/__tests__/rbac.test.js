@@ -5,7 +5,7 @@
  * Run with: npm test or node --test src/__tests__/rbac.test.js
  */
 
-import { describe, it, before } from 'node:test';
+import { describe, it } from 'node:test';
 import assert from 'node:assert';
 import {
   ROLES,
