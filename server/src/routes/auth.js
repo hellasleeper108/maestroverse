@@ -19,7 +19,7 @@ import {
   extractTokens,
   generateDeviceId,
 } from '../utils/tokens.js';
-import { loginRateLimiter, registerRateLimiter } from '../middleware/rateLimiter.js';
+import { loginRateLimiter, registerRateLimiter, clearAllRateLimits } from '../middleware/rateLimiter.js';
 import { generateCSRFToken } from '../utils/csrf.js';
 import { csrfProtection } from '../middleware/csrfProtection.js';
 
@@ -115,6 +115,9 @@ router.post('/register', registerRateLimiter, async (req, res) => {
     // Set HTTP-only cookies
     setTokenCookies(res, accessToken, refreshToken);
 
+    // Clear rate limits on successful registration
+    await clearAllRateLimits(req, 'register');
+
     res.status(201).json({
       message: 'User registered successfully',
       user,
@@ -203,6 +206,9 @@ router.post('/login', loginRateLimiter, async (req, res) => {
 
     // Set HTTP-only cookies
     setTokenCookies(res, accessToken, refreshToken);
+
+    // Clear rate limits on successful login
+    await clearAllRateLimits(req, 'login');
 
     // Return user without password
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
