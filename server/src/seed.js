@@ -1,10 +1,51 @@
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
+import { isSeedingAllowed, getEnvironmentStatus } from './utils/demoGuard.js';
 
 const prisma = new PrismaClient();
 
 async function main() {
   console.log('🌱 Starting database seed...\n');
+
+  // Production safety check
+  const envStatus = getEnvironmentStatus();
+  console.log('Environment Status:');
+  console.log(`  NODE_ENV: ${envStatus.env}`);
+  console.log(`  ALLOW_DEMO: ${envStatus.allowDemo}`);
+  console.log(`  Seeding allowed: ${envStatus.seedingAllowed}\n`);
+
+  if (!isSeedingAllowed()) {
+    console.error('\n' + '='.repeat(80));
+    console.error('❌ SEEDING BLOCKED IN PRODUCTION');
+    console.error('='.repeat(80));
+    console.error('For security reasons, seeding is disabled in production.');
+    console.error('Demo accounts have well-known passwords (password123) and should');
+    console.error('never be created in production environments.');
+    console.error('');
+    console.error('If you absolutely need to seed in production (e.g., for staging):');
+    console.error('  1. Set ALLOW_DEMO=1 in your .env file');
+    console.error('  2. Run the seed script');
+    console.error('  3. IMMEDIATELY remove ALLOW_DEMO=1 after seeding');
+    console.error('  4. Change all demo account passwords');
+    console.error('');
+    console.error('⚠️  WARNING: Leaving demo accounts accessible in production is a');
+    console.error('   CRITICAL SECURITY VULNERABILITY');
+    console.error('='.repeat(80) + '\n');
+    process.exit(1);
+  }
+
+  // Warn if seeding in production with ALLOW_DEMO=1
+  if (envStatus.env === 'production' && envStatus.seedingAllowed) {
+    console.warn('\n' + '⚠️ '.repeat(40));
+    console.warn('SEEDING IN PRODUCTION WITH DEMO ACCOUNTS ENABLED!');
+    console.warn('This is extremely dangerous and should only be done in staging.');
+    console.warn('Demo account credentials will be publicly known.');
+    console.warn('⚠️ '.repeat(40) + '\n');
+
+    // Give time to cancel (Ctrl+C)
+    console.log('Continuing in 5 seconds... (Press Ctrl+C to cancel)');
+    await new Promise((resolve) => setTimeout(resolve, 5000));
+  }
 
   // Create demo users with different roles
   console.log('Creating users with roles...');

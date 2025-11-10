@@ -33,6 +33,7 @@ import {
   consumePasswordResetToken,
   RESET_TOKEN_EXPIRY_MINUTES,
 } from '../utils/passwordReset.js';
+import { isDemoUser, areDemoLoginsAllowed } from '../utils/demoGuard.js';
 
 const router = express.Router();
 const prisma = new PrismaClient();
@@ -150,6 +151,15 @@ router.post('/register', registerRateLimiter, async (req, res) => {
 router.post('/login', loginRateLimiter, async (req, res) => {
   try {
     const data = loginSchema.parse(req.body);
+
+    // Block demo user logins in production (unless ALLOW_DEMO=1)
+    if (!areDemoLoginsAllowed() && isDemoUser(data.emailOrUsername)) {
+      return res.status(403).json({
+        error: 'Demo accounts are disabled in production',
+        message:
+          'For security reasons, demo accounts with well-known passwords are not accessible in production environments.',
+      });
+    }
 
     // Find user by email or username
     const user = await prisma.user.findFirst({

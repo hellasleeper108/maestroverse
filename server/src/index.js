@@ -43,6 +43,9 @@ import {
   getAllowedOrigins,
 } from './config/cors.js';
 
+// Demo user protection
+import { validateProductionSafety } from './utils/demoGuard.js';
+
 // ============================================================================
 // STARTUP VALIDATION - Fails boot if production CORS is misconfigured
 // ============================================================================
@@ -56,6 +59,11 @@ try {
   console.error('='.repeat(80) + '\n');
   process.exit(1);
 }
+
+// ============================================================================
+// DEMO USER SAFETY CHECK - Warns if demo accounts enabled in production
+// ============================================================================
+validateProductionSafety();
 
 const __filename = fileURLToPath(import.meta.url);
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
