@@ -445,20 +445,28 @@ model Session {
 }
 
 model RefreshToken {
-  id        String   @id @default(cuid())
-  token     String   @unique
-  userId    String
-  expiresAt DateTime
-  createdAt DateTime @default(now())
-  isRevoked Boolean  @default(false)
-  ipAddress String?
-  userAgent String?
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id                String         @id @default(cuid())
+  tokenHash         String         @unique
+  deviceId          String
+  userId            String
+  expiresAt         DateTime
+  createdAt         DateTime       @default(now())
+  lastUsedAt        DateTime?
+  isRevoked         Boolean        @default(false)
+  ipAddress         String?
+  userAgent         String?
+  replacedByTokenId String?
+  user              User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  replacedByToken   RefreshToken?  @relation("TokenRotation", fields: [replacedByTokenId], references: [id], onDelete: SetNull)
+  replacedToken     RefreshToken?  @relation("TokenRotation")
 
+  @@unique([userId, deviceId])
   @@index([userId])
-  @@index([token])
+  @@index([tokenHash])
+  @@index([deviceId])
   @@index([expiresAt])
   @@index([isRevoked])
+  @@index([lastUsedAt])
 }
 
 model OAuthAccount {

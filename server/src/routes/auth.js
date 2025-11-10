@@ -11,9 +11,13 @@ import {
   verifyRefreshToken,
   revokeRefreshToken,
   revokeAllUserTokens,
+  revokeDeviceToken,
+  rotateRefreshToken,
+  getUserSessions,
   setTokenCookies,
   clearTokenCookies,
   extractTokens,
+  generateDeviceId,
 } from '../utils/tokens.js';
 import { loginRateLimiter, registerRateLimiter } from '../middleware/rateLimiter.js';
 
@@ -96,9 +100,15 @@ router.post('/register', registerRateLimiter, async (req, res) => {
       },
     });
 
-    // Generate tokens
+    // Generate tokens with device tracking
     const accessToken = generateAccessToken(user.id);
-    const refreshToken = await generateRefreshToken(user.id, req.ip, req.headers['user-agent']);
+    const deviceId = generateDeviceId(req);
+    const refreshToken = await generateRefreshToken(
+      user.id,
+      deviceId,
+      req.ip,
+      req.headers['user-agent']
+    );
 
     // Set HTTP-only cookies
     setTokenCookies(res, accessToken, refreshToken);
@@ -179,9 +189,15 @@ router.post('/login', loginRateLimiter, async (req, res) => {
       data: { lastActive: new Date() },
     });
 
-    // Generate tokens
+    // Generate tokens with device tracking
     const accessToken = generateAccessToken(user.id);
-    const refreshToken = await generateRefreshToken(user.id, req.ip, req.headers['user-agent']);
+    const deviceId = generateDeviceId(req);
+    const refreshToken = await generateRefreshToken(
+      user.id,
+      deviceId,
+      req.ip,
+      req.headers['user-agent']
+    );
 
     // Set HTTP-only cookies
     setTokenCookies(res, accessToken, refreshToken);
@@ -244,7 +260,7 @@ router.get('/me', authenticate, async (req, res) => {
 
 /**
  * POST /api/auth/refresh
- * Refresh access token using refresh token (token rotation)
+ * Refresh access token using refresh token (automatic token rotation)
  */
 router.post('/refresh', async (req, res) => {
   try {
@@ -257,24 +273,22 @@ router.post('/refresh', async (req, res) => {
       return res.status(401).json({ error: 'Refresh token required' });
     }
 
-    // Verify refresh token
-    const refreshTokenRecord = await verifyRefreshToken(refreshTokenString);
+    // Rotate refresh token (invalidates old, issues new)
+    const result = await rotateRefreshToken(refreshTokenString, req.ip, req.headers['user-agent']);
 
-    if (!refreshTokenRecord) {
+    if (!result) {
       return res.status(401).json({ error: 'Invalid or expired refresh token' });
     }
 
-    // Check user status
-    const user = refreshTokenRecord.user;
+    const { accessToken, refreshToken, user } = result;
 
+    // Check user status
     if (user.status === 'BANNED') {
-      await revokeRefreshToken(refreshTokenString);
       return res.status(403).json({ error: 'This account has been permanently banned.' });
     }
 
     if (user.status === 'SUSPENDED') {
       if (user.suspendedUntil && user.suspendedUntil > new Date()) {
-        await revokeRefreshToken(refreshTokenString);
         return res.status(403).json({
           error: `Account suspended until ${user.suspendedUntil.toISOString()}`,
         });
@@ -287,19 +301,12 @@ router.post('/refresh', async (req, res) => {
       });
     }
 
-    // Revoke old refresh token (token rotation)
-    await revokeRefreshToken(refreshTokenString);
-
-    // Generate new tokens
-    const newAccessToken = generateAccessToken(user.id);
-    const newRefreshToken = await generateRefreshToken(user.id, req.ip, req.headers['user-agent']);
-
     // Set new cookies
-    setTokenCookies(res, newAccessToken, newRefreshToken);
+    setTokenCookies(res, accessToken, refreshToken);
 
     res.json({
       message: 'Token refreshed successfully',
-      token: newAccessToken, // For backward compatibility
+      token: accessToken, // For backward compatibility
     });
   } catch (error) {
     console.error('Token refresh error:', error);
@@ -357,6 +364,66 @@ router.post('/logout-all', authenticate, async (req, res) => {
 });
 
 /**
+ * POST /api/auth/logout-device
+ * Logout from a specific device by revoking that device's tokens
+ */
+router.post('/logout-device', authenticate, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { deviceId } = req.body;
+
+    if (!deviceId) {
+      return res.status(400).json({ error: 'Device ID required' });
+    }
+
+    // Revoke tokens for specific device
+    const count = await revokeDeviceToken(userId, deviceId);
+
+    if (count === 0) {
+      return res.status(404).json({ error: 'No active session found for this device' });
+    }
+
+    // If logging out current device, clear cookies
+    const currentDeviceId = generateDeviceId(req);
+    if (deviceId === currentDeviceId) {
+      clearTokenCookies(res);
+    }
+
+    res.json({
+      message: `Logged out from device (${count} session(s) terminated)`,
+    });
+  } catch (error) {
+    console.error('Logout device error:', error);
+    res.status(500).json({ error: 'Failed to logout from device' });
+  }
+});
+
+/**
+ * GET /api/auth/sessions
+ * Get all active sessions for the current user
+ */
+router.get('/sessions', authenticate, async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    // Get all active sessions
+    const sessions = await getUserSessions(userId);
+
+    // Add 'current' flag to current device
+    const currentDeviceId = generateDeviceId(req);
+    const sessionsWithCurrent = sessions.map((session) => ({
+      ...session,
+      isCurrent: session.deviceId === currentDeviceId,
+    }));
+
+    res.json({ sessions: sessionsWithCurrent });
+  } catch (error) {
+    console.error('Get sessions error:', error);
+    res.status(500).json({ error: 'Failed to fetch sessions' });
+  }
+});
+
+/**
  * GET /api/auth/google
  * Initiate Google OAuth flow
  */
@@ -399,9 +466,15 @@ router.get(
         });
       }
 
-      // Generate tokens
+      // Generate tokens with device tracking
       const accessToken = generateAccessToken(user.id);
-      const refreshToken = await generateRefreshToken(user.id, req.ip, req.headers['user-agent']);
+      const deviceId = generateDeviceId(req);
+      const refreshToken = await generateRefreshToken(
+        user.id,
+        deviceId,
+        req.ip,
+        req.headers['user-agent']
+      );
 
       // Set cookies
       setTokenCookies(res, accessToken, refreshToken);
@@ -459,9 +532,15 @@ router.get(
         });
       }
 
-      // Generate tokens
+      // Generate tokens with device tracking
       const accessToken = generateAccessToken(user.id);
-      const refreshToken = await generateRefreshToken(user.id, req.ip, req.headers['user-agent']);
+      const deviceId = generateDeviceId(req);
+      const refreshToken = await generateRefreshToken(
+        user.id,
+        deviceId,
+        req.ip,
+        req.headers['user-agent']
+      );
 
       // Set cookies
       setTokenCookies(res, accessToken, refreshToken);
@@ -599,9 +678,15 @@ router.post('/sso/callback', async (req, res) => {
       });
     }
 
-    // Generate tokens
+    // Generate tokens with device tracking
     const accessToken = generateAccessToken(user.id);
-    const refreshToken = await generateRefreshToken(user.id, req.ip, req.headers['user-agent']);
+    const deviceId = generateDeviceId(req);
+    const refreshToken = await generateRefreshToken(
+      user.id,
+      deviceId,
+      req.ip,
+      req.headers['user-agent']
+    );
 
     // Set HTTP-only cookies
     setTokenCookies(res, accessToken, refreshToken);
