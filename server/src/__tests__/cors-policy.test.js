@@ -470,7 +470,7 @@ describe('CORS Policy', () => {
 
       try {
         validateCORSConfig();
-        fail('Should have thrown an error');
+        throw new Error('Expected validateCORSConfig to throw an error');
       } catch (error) {
         expect(error.message).toContain('CORS_ORIGINS must be set');
         expect(error.message).toContain('production environment');
@@ -486,7 +486,7 @@ describe('CORS Policy', () => {
 
       try {
         validateCORSConfig();
-        fail('Should have thrown an error');
+        throw new Error('Expected validateCORSConfig to throw an error');
       } catch (error) {
         expect(error.message).toContain('No valid origins found');
         expect(error.message).toContain('valid URLs');
@@ -499,7 +499,7 @@ describe('CORS Policy', () => {
 
       try {
         parseAllowedOrigins();
-        fail('Should have thrown an error');
+        throw new Error('Expected parseAllowedOrigins to throw an error');
       } catch (error) {
         expect(error.message).toContain('Wildcard');
         expect(error.message).toContain('not allowed');

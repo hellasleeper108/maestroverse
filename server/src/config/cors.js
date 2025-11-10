@@ -179,30 +179,8 @@ export function createCORSMiddleware() {
       callback(error);
     },
 
-    // Credentials handling
-    credentials: function (origin, callback) {
-      // CRITICAL: Only allow credentials for whitelisted origins
-      // Never allow credentials for wildcard or unknown origins
-      if (!origin) {
-        return callback(null, false);
-      }
-
-      if (allowedOrigins.includes('*')) {
-        // Wildcard cannot be used with credentials
-        return callback(null, false);
-      }
-
-      if (allowedOrigins.includes(origin)) {
-        // Allow credentials only for whitelisted origins
-        return callback(null, true);
-      }
-
-      // Unknown origin - block credentials
-      callback(null, false);
-    },
-
     // Allow credentials (cookies, authorization headers)
-    // This works in conjunction with the credentials function above
+    // Only works with whitelisted origins (handled by origin callback above)
     credentials: true,
 
     // Allowed methods
