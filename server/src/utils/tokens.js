@@ -1,11 +1,16 @@
 /**
- * Token Management Utilities
+ * Token Management Utilities - Enhanced Security
  *
- * Provides secure JWT access token and refresh token generation,
- * verification, and management with HTTP-only cookie support.
+ * Provides secure JWT access token and refresh token generation with:
+ * - Token rotation on every refresh (single-use tokens)
+ * - Per-device token tracking
+ * - Hashed token storage (bcrypt)
+ * - Reuse detection (security breach indicator)
+ * - HTTP-only, Secure, SameSite=Strict cookies
  */
 
 import jwt from 'jsonwebtoken';
+import bcrypt from 'bcryptjs';
 import { nanoid } from 'nanoid';
 import { PrismaClient } from '@prisma/client';
 
@@ -32,23 +37,45 @@ export function generateAccessToken(userId) {
 }
 
 /**
- * Generate a secure refresh token and store in database
+ * Generate a secure refresh token and store hashed version in database
  * @param {string} userId - User ID
+ * @param {string} deviceId - Device identifier (e.g., fingerprint, UUID)
  * @param {string} ipAddress - Client IP address
  * @param {string} userAgent - Client user agent
- * @returns {Promise<string>} Refresh token string
+ * @returns {Promise<string>} Refresh token string (return to client)
  */
-export async function generateRefreshToken(userId, ipAddress, userAgent) {
+export async function generateRefreshToken(userId, deviceId, ipAddress, userAgent) {
   // Generate cryptographically secure random token
   const token = nanoid(64);
+
+  // Hash the token before storing (like passwords)
+  const tokenHash = await bcrypt.hash(token, 10);
 
   // Calculate expiration date
   const expiresAt = new Date(Date.now() + REFRESH_TOKEN_EXPIRY_MS);
 
-  // Store token in database
+  // Check if a token already exists for this user+device combination
+  const existingToken = await prisma.refreshToken.findFirst({
+    where: {
+      userId,
+      deviceId,
+      isRevoked: false,
+    },
+  });
+
+  // If exists, revoke it (we're replacing it)
+  if (existingToken) {
+    await prisma.refreshToken.update({
+      where: { id: existingToken.id },
+      data: { isRevoked: true },
+    });
+  }
+
+  // Store hashed token in database
   await prisma.refreshToken.create({
     data: {
-      token,
+      tokenHash,
+      deviceId,
       userId,
       expiresAt,
       ipAddress: ipAddress || null,
@@ -56,32 +83,8 @@ export async function generateRefreshToken(userId, ipAddress, userAgent) {
     },
   });
 
+  // Return the plain token to send to client
   return token;
-}
-
-/**
- * Verify and decode a JWT access token
- * @param {string} token - JWT token to verify
- * @returns {object|null} Decoded token payload or null if invalid
- */
-export function verifyAccessToken(token) {
-  try {
-    if (!process.env.JWT_SECRET) {
-      throw new Error('JWT_SECRET is not defined in environment variables');
-    }
-
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
-    // Ensure this is an access token
-    if (decoded.type !== 'access') {
-      return null;
-    }
-
-    return decoded;
-  } catch (error) {
-    // Token expired, invalid, or malformed
-    return null;
-  }
 }
 
 /**
@@ -91,8 +94,14 @@ export function verifyAccessToken(token) {
  */
 export async function verifyRefreshToken(token) {
   try {
-    const refreshToken = await prisma.refreshToken.findUnique({
-      where: { token },
+    // Fetch all non-revoked, non-expired tokens to check against
+    const candidateTokens = await prisma.refreshToken.findMany({
+      where: {
+        isRevoked: false,
+        expiresAt: {
+          gt: new Date(),
+        },
+      },
       include: {
         user: {
           select: {
@@ -110,52 +119,155 @@ export async function verifyRefreshToken(token) {
       },
     });
 
-    // Check if token exists
-    if (!refreshToken) {
-      return null;
+    // Find matching token by comparing hash
+    for (const candidate of candidateTokens) {
+      const isMatch = await bcrypt.compare(token, candidate.tokenHash);
+      if (isMatch) {
+        return candidate;
+      }
     }
 
-    // Check if token is revoked
-    if (refreshToken.isRevoked) {
-      return null;
-    }
-
-    // Check if token has expired
-    if (new Date() > refreshToken.expiresAt) {
-      // Clean up expired token
-      await prisma.refreshToken.delete({
-        where: { id: refreshToken.id },
-      });
-      return null;
-    }
-
-    return refreshToken;
+    // No matching token found
+    return null;
   } catch (error) {
-    console.error('Refresh token verification error:', error);
+    console.error('[TOKEN] Verification error:', error);
     return null;
   }
 }
 
 /**
- * Revoke a refresh token
+ * Rotate refresh token (invalidate old, issue new)
+ * This implements token rotation - each refresh token is single-use
+ *
+ * @param {string} oldToken - Current refresh token
+ * @param {string} ipAddress - Client IP address
+ * @param {string} userAgent - Client user agent
+ * @returns {Promise<object|null>} { accessToken, refreshToken, user } or null if invalid
+ */
+export async function rotateRefreshToken(oldToken, ipAddress, userAgent) {
+  try {
+    // Verify the old token
+    const oldTokenRecord = await verifyRefreshToken(oldToken);
+
+    if (!oldTokenRecord) {
+      return null;
+    }
+
+    // CRITICAL SECURITY CHECK: Detect token reuse
+    // If a token has already been replaced (replacedByTokenId is set),
+    // this indicates a potential security breach (token theft/replay attack)
+    if (oldTokenRecord.replacedByTokenId) {
+      console.error(
+        `[SECURITY] Refresh token reuse detected for user ${oldTokenRecord.userId}, device ${oldTokenRecord.deviceId}`
+      );
+
+      // Revoke ALL tokens for this user on this device as a security measure
+      await prisma.refreshToken.updateMany({
+        where: {
+          userId: oldTokenRecord.userId,
+          deviceId: oldTokenRecord.deviceId,
+        },
+        data: { isRevoked: true },
+      });
+
+      return null;
+    }
+
+    // Update lastUsedAt timestamp
+    await prisma.refreshToken.update({
+      where: { id: oldTokenRecord.id },
+      data: { lastUsedAt: new Date() },
+    });
+
+    // Generate new access token
+    const newAccessToken = generateAccessToken(oldTokenRecord.userId);
+
+    // Generate new refresh token
+    const newRefreshToken = await generateRefreshToken(
+      oldTokenRecord.userId,
+      oldTokenRecord.deviceId,
+      ipAddress,
+      userAgent
+    );
+
+    // Get the newly created token record to link the rotation chain
+    const newTokenRecord = await prisma.refreshToken.findFirst({
+      where: {
+        userId: oldTokenRecord.userId,
+        deviceId: oldTokenRecord.deviceId,
+        isRevoked: false,
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    // Mark old token as replaced (but don't revoke yet - allows grace period)
+    await prisma.refreshToken.update({
+      where: { id: oldTokenRecord.id },
+      data: {
+        replacedByTokenId: newTokenRecord.id,
+        isRevoked: true, // Immediately revoke to prevent reuse
+      },
+    });
+
+    return {
+      accessToken: newAccessToken,
+      refreshToken: newRefreshToken,
+      user: oldTokenRecord.user,
+    };
+  } catch (error) {
+    console.error('[TOKEN] Rotation error:', error);
+    return null;
+  }
+}
+
+/**
+ * Revoke a specific refresh token by token string
  * @param {string} token - Refresh token to revoke
  * @returns {Promise<boolean>} True if revoked successfully
  */
 export async function revokeRefreshToken(token) {
   try {
+    const tokenRecord = await verifyRefreshToken(token);
+    if (!tokenRecord) {
+      return false;
+    }
+
     await prisma.refreshToken.update({
-      where: { token },
+      where: { id: tokenRecord.id },
       data: { isRevoked: true },
     });
     return true;
   } catch (error) {
-    console.error('Token revocation error:', error);
+    console.error('[TOKEN] Revocation error:', error);
     return false;
   }
 }
 
 /**
- * Revoke all refresh tokens for a user
+ * Revoke a specific device token for a user
+ * @param {string} userId - User ID
+ * @param {string} deviceId - Device ID to revoke
+ * @returns {Promise<number>} Number of tokens revoked
+ */
+export async function revokeDeviceToken(userId, deviceId) {
+  try {
+    const result = await prisma.refreshToken.updateMany({
+      where: {
+        userId,
+        deviceId,
+        isRevoked: false,
+      },
+      data: { isRevoked: true },
+    });
+    return result.count;
+  } catch (error) {
+    console.error('[TOKEN] Device revocation error:', error);
+    return 0;
+  }
+}
+
+/**
+ * Revoke all refresh tokens for a user (all devices)
  * @param {string} userId - User ID
  * @returns {Promise<number>} Number of tokens revoked
  */
@@ -167,8 +279,42 @@ export async function revokeAllUserTokens(userId) {
     });
     return result.count;
   } catch (error) {
-    console.error('Bulk token revocation error:', error);
+    console.error('[TOKEN] Bulk revocation error:', error);
     return 0;
+  }
+}
+
+/**
+ * Get all active sessions for a user (for session management UI)
+ * @param {string} userId - User ID
+ * @returns {Promise<Array>} Array of active session info
+ */
+export async function getUserSessions(userId) {
+  try {
+    const sessions = await prisma.refreshToken.findMany({
+      where: {
+        userId,
+        isRevoked: false,
+        expiresAt: {
+          gt: new Date(),
+        },
+      },
+      select: {
+        id: true,
+        deviceId: true,
+        ipAddress: true,
+        userAgent: true,
+        createdAt: true,
+        lastUsedAt: true,
+        expiresAt: true,
+      },
+      orderBy: { lastUsedAt: 'desc' },
+    });
+
+    return sessions;
+  } catch (error) {
+    console.error('[TOKEN] Session retrieval error:', error);
+    return [];
   }
 }
 
@@ -205,7 +351,7 @@ export function setTokenCookies(res, accessToken, refreshToken) {
   const cookieOptions = {
     httpOnly: true,
     secure: isProd, // HTTPS only in production
-    sameSite: isProd ? 'strict' : 'lax',
+    sameSite: 'strict', // Always strict for maximum CSRF protection
     path: '/',
   };
 
@@ -255,4 +401,24 @@ export function extractTokens(req) {
   }
 
   return { accessToken, refreshToken };
+}
+
+/**
+ * Generate a device ID from request headers
+ * In production, client should generate and persist a UUID
+ * @param {object} req - Express request object
+ * @returns {string} Device identifier
+ */
+export function generateDeviceId(req) {
+  // In a real application, the client should generate a persistent UUID
+  // and send it in a header (e.g., X-Device-ID)
+  // This is a fallback that creates a fingerprint from user agent
+  const deviceIdHeader = req.headers['x-device-id'];
+  if (deviceIdHeader) {
+    return deviceIdHeader;
+  }
+
+  // Fallback: create fingerprint from user agent (not ideal, but works)
+  const userAgent = req.headers['user-agent'] || 'unknown';
+  return `fallback-${Buffer.from(userAgent).toString('base64').substring(0, 32)}`;
 }

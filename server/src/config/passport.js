@@ -10,6 +10,7 @@ import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
 import { Strategy as GitHubStrategy } from 'passport-github2';
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
+import crypto from 'crypto';
 
 const prisma = new PrismaClient();
 
@@ -88,8 +89,8 @@ async function findOrCreateOAuthUser(provider, profile, accessToken, refreshToke
     ? email.split('@')[0]
     : `${provider.toLowerCase()}_${providerId.substring(0, 8)}`;
 
-  // Generate random password for OAuth-only users
-  const randomPassword = await bcrypt.hash(Math.random().toString(36), 12);
+  // Generate cryptographically secure random password for OAuth-only users
+  const randomPassword = await bcrypt.hash(crypto.randomBytes(32).toString('hex'), 12);
 
   // Extract name from displayName
   const nameParts = displayName.split(' ');

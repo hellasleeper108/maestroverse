@@ -56,6 +56,7 @@ model User {
   createdChatRooms     ChatRoom[]         @relation("ChatRoomCreator")
   chatRoomMemberships  ChatRoomMember[]
   chatMessages         ChatMessage[]
+  passwordResetTokens  PasswordResetToken[]
 
   @@index([email])
   @@index([username])
@@ -445,20 +446,28 @@ model Session {
 }
 
 model RefreshToken {
-  id        String   @id @default(cuid())
-  token     String   @unique
-  userId    String
-  expiresAt DateTime
-  createdAt DateTime @default(now())
-  isRevoked Boolean  @default(false)
-  ipAddress String?
-  userAgent String?
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id                String         @id @default(cuid())
+  tokenHash         String         @unique
+  deviceId          String
+  userId            String
+  expiresAt         DateTime
+  createdAt         DateTime       @default(now())
+  lastUsedAt        DateTime?
+  isRevoked         Boolean        @default(false)
+  ipAddress         String?
+  userAgent         String?
+  replacedByTokenId String?
+  user              User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  replacedByToken   RefreshToken?  @relation("TokenRotation", fields: [replacedByTokenId], references: [id], onDelete: SetNull)
+  replacedToken     RefreshToken?  @relation("TokenRotation")
 
+  @@unique([userId, deviceId])
   @@index([userId])
-  @@index([token])
+  @@index([tokenHash])
+  @@index([deviceId])
   @@index([expiresAt])
   @@index([isRevoked])
+  @@index([lastUsedAt])
 }
 
 model OAuthAccount {
@@ -543,16 +552,22 @@ model WebAuthnCredential {
 model AuditLog {
   id          String   @id @default(cuid())
   userId      String?
-  action      String   // e.g., 'LOGIN', 'LOGOUT', 'PASSWORD_CHANGE'
+  event       String   // Security event type (e.g., 'ACCOUNT_LOCKED', 'LOGIN_FAILURE')
+  action      String?  // Legacy field for backwards compatibility
   ipAddress   String?
   userAgent   String?
-  metadata    String?  // JSON additional data
+  details     String?  // JSON details
+  metadata    String?  // Legacy field for backwards compatibility
+  severity    String   @default("MEDIUM") // LOW, MEDIUM, HIGH, CRITICAL
   success     Boolean  @default(true)
   errorMessage String?
+  timestamp   DateTime @default(now())
   createdAt   DateTime @default(now())
 
   @@index([userId])
-  @@index([action])
+  @@index([event])
+  @@index([severity])
+  @@index([timestamp])
   @@index([createdAt])
 }
 
@@ -568,6 +583,37 @@ model RateLimitRecord {
   @@unique([identifier, action])
   @@index([identifier])
   @@index([resetAt])
+}
+
+model AccountLockout {
+  id          String   @id @default(cuid())
+  identifier  String   @unique // User identifier (email/username)
+  lockedUntil DateTime
+  attempts    Int      @default(0)
+  reason      String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([identifier])
+  @@index([lockedUntil])
+}
+
+model PasswordResetToken {
+  id         String   @id @default(cuid())
+  userId     String
+  tokenHash  String   @unique // Hashed token - never store plaintext
+  expiresAt  DateTime // 15-minute TTL
+  used       Boolean  @default(false) // Prevent replay attacks
+  usedAt     DateTime? // When token was consumed
+  ipAddress  String? // IP that requested reset
+  userAgent  String? // User agent that requested reset
+  createdAt  DateTime @default(now())
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([tokenHash])
+  @@index([expiresAt])
+  @@index([used])
 }
 
 // ========== ENUMS ==========
