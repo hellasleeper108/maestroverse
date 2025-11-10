@@ -1,0 +1,131 @@
+# =============================================================================
+# STAGE 1: Dependencies
+# =============================================================================
+# Security: Use specific version tag for reproducibility
+# Optimization: Alpine variant is ~5x smaller (150MB vs 900MB)
+FROM node:18-alpine AS deps
+
+# Security: Run as non-root user
+WORKDIR /app
+
+# Optimization: Install minimal dependencies for Next.js
+# libc6-compat for compatibility with some npm packages
+RUN apk add --no-cache libc6-compat
+
+# Optimization: Copy package files first for better caching
+COPY package*.json ./
+
+# Security: Use npm ci for reproducible builds
+# --only=production excludes devDependencies
+RUN npm ci --only=production && \
+    # Optimization: Clean npm cache
+    npm cache clean --force
+
+# =============================================================================
+# STAGE 2: Build
+# =============================================================================
+# Security: Separate build stage isolates build tools
+FROM node:18-alpine AS builder
+
+WORKDIR /app
+
+# Install build dependencies
+RUN apk add --no-cache libc6-compat
+
+# Copy package files
+COPY package*.json ./
+
+# Install ALL dependencies for building
+RUN npm ci
+
+# Copy source code
+COPY . .
+
+# Security: Build-time environment variables
+# These are baked into the client-side bundle
+# Use ARG for build-time variables that can be overridden
+ARG NEXT_PUBLIC_API_URL=http://localhost:3001
+ARG NEXT_PUBLIC_WS_URL=ws://localhost:3001
+ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+ENV NEXT_PUBLIC_WS_URL=$NEXT_PUBLIC_WS_URL
+
+# Optimization: Build Next.js application
+# This creates optimized production build in .next directory
+# - Minifies JavaScript
+# - Optimizes images
+# - Generates static pages where possible
+# - Creates production-ready bundles
+RUN npm run build && \
+    # Optimization: Remove dev dependencies after build
+    npm prune --production
+
+# =============================================================================
+# STAGE 3: Production
+# =============================================================================
+# Security: Minimal production image
+FROM node:18-alpine AS runner
+
+# Security: Set production environment
+ENV NODE_ENV=production
+
+WORKDIR /app
+
+# Optimization: Install only runtime dependencies
+RUN apk add --no-cache libc6-compat
+
+# Security: Create non-root user
+# Next.js expects user/group ID 1001
+RUN addgroup --system --gid 1001 nodejs && \
+    adduser --system --uid 1001 nextjs
+
+# Security: Set ownership for necessary directories
+RUN mkdir -p /app/.next && \
+    chown -R nextjs:nodejs /app
+
+# Copy production node_modules from deps stage
+COPY --from=deps --chown=nextjs:nodejs /app/node_modules ./node_modules
+
+# Copy built application from builder stage
+# .next contains the compiled Next.js application
+COPY --from=builder --chown=nextjs:nodejs /app/.next ./.next
+
+# Copy necessary files for Next.js to run
+# public/ contains static assets (images, fonts, etc.)
+COPY --chown=nextjs:nodejs ./public ./public
+COPY --chown=nextjs:nodejs ./package*.json ./
+
+# Optimization: Copy next.config.js if it exists
+COPY --chown=nextjs:nodejs ./next.config.* ./
+
+# Security: Switch to non-root user
+USER nextjs
+
+# Document exposed port
+EXPOSE 3000
+
+# Security: Use array syntax to prevent shell interpretation
+# Next.js start command runs the production server
+CMD ["npm", "start"]
+
+# Optimization: Healthcheck for Next.js application
+# Checks if the server is responding
+HEALTHCHECK --interval=30s --timeout=3s --start-period=40s --retries=3 \
+    CMD node -e "require('http').get('http://localhost:3000', (r) => process.exit(r.statusCode === 200 ? 0 : 1))"
+
+# =============================================================================
+# Image Metadata (Labels)
+# =============================================================================
+LABEL org.opencontainers.image.title="Maestroverse Web Frontend"
+LABEL org.opencontainers.image.description="Production-optimized Next.js frontend for Maestroverse"
+LABEL org.opencontainers.image.version="1.0"
+LABEL org.opencontainers.image.vendor="Maestroverse"
+LABEL maintainer="dev@maestroverse.edu"
+
+# =============================================================================
+# Build Instructions
+# =============================================================================
+# Build with custom API URL:
+#   docker build --build-arg NEXT_PUBLIC_API_URL=https://api.yourdomain.com \
+#                --build-arg NEXT_PUBLIC_WS_URL=wss://api.yourdomain.com \
+#                -f Dockerfile.prod -t maestroverse-web:latest .
+# =============================================================================
