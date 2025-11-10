@@ -1,5 +1,4 @@
 import express from 'express';
-import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
 import dotenv from 'dotenv';
@@ -9,6 +8,9 @@ import { Server } from 'socket.io';
 import fileUpload from 'express-fileupload';
 import path from 'path';
 import { fileURLToPath } from 'url';
+
+// Load environment variables FIRST
+dotenv.config();
 
 // Import routes
 import authRoutes from './routes/auth.js';
@@ -32,8 +34,27 @@ import { initializeWebSocket } from './websocket/index.js';
 // File upload utilities
 import { ensureUploadDirectories } from './middleware/fileUpload.js';
 
-// Load environment variables
-dotenv.config();
+// CORS configuration with strict validation
+import {
+  validateCORSConfig,
+  createCORSMiddleware,
+  corsErrorHandler,
+  getAllowedOrigins,
+} from './config/cors.js';
+
+// ============================================================================
+// STARTUP VALIDATION - Fails boot if production CORS is misconfigured
+// ============================================================================
+try {
+  validateCORSConfig();
+} catch (error) {
+  console.error('\n' + '='.repeat(80));
+  console.error('CRITICAL SECURITY ERROR - Server startup aborted');
+  console.error('='.repeat(80));
+  console.error(error.message);
+  console.error('='.repeat(80) + '\n');
+  process.exit(1);
+}
 
 const __filename = fileURLToPath(import.meta.url);
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -47,45 +68,17 @@ const isProd = process.env.NODE_ENV === 'production';
 app.disable('x-powered-by');
 app.set('trust proxy', 1);
 
-const allowedOrigins = (process.env.CORS_ORIGINS || 'http://localhost:3005')
-  .split(',')
-  .map((origin) => origin.trim())
-  .filter(Boolean);
+// Get validated allowed origins
+const allowedOrigins = getAllowedOrigins();
 
-// Initialize Socket.IO for real-time features
+// Initialize Socket.IO for real-time features with strict CORS
 const io = new Server(httpServer, {
   cors: {
-    origin: allowedOrigins.length > 0 ? allowedOrigins : '*',
+    origin: allowedOrigins,
     methods: ['GET', 'POST'],
+    credentials: true,
   },
 });
-
-// Middleware
-const corsOptions = {
-  origin: (origin, callback) => {
-    if (!origin || allowedOrigins.includes(origin)) {
-      return callback(null, true);
-    }
-    console.warn(`Blocked CORS request from origin: ${origin}`);
-    return callback(null, false);
-  },
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-  allowedHeaders: [
-    'Accept',
-    'Authorization',
-    'Content-Type',
-    'Origin',
-    'X-Requested-With',
-    'X-CSRF-Token',
-  ],
-  exposedHeaders: [
-    'X-RateLimit-Limit',
-    'X-RateLimit-Remaining',
-    'X-RateLimit-Reset',
-    'Retry-After',
-  ],
-};
 
 app.use(
   helmet({
@@ -104,8 +97,11 @@ if (isProd) {
   );
 }
 
-app.use(cors(corsOptions));
-app.options('*', cors(corsOptions));
+// Apply strict CORS policy
+const corsMiddleware = createCORSMiddleware();
+app.use(corsMiddleware);
+app.options('*', corsMiddleware);
+
 if (!isProd) {
   app.use(morgan('dev'));
 }
@@ -178,6 +174,9 @@ app.use('/api/files', filesRoutes); // Secure file serving with signed URLs
 app.use((req, res) => {
   res.status(404).json({ error: 'Route not found' });
 });
+
+// CORS error handler (must come before general error handler)
+app.use(corsErrorHandler);
 
 // Error handler
 app.use((err, req, res, _next) => {
