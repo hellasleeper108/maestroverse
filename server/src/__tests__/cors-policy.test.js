@@ -47,8 +47,7 @@ describe('CORS Policy', () => {
     });
 
     it('should trim whitespace from origins', () => {
-      process.env.CORS_ORIGINS =
-        '  https://example.com  ,  http://localhost:3000  ';
+      process.env.CORS_ORIGINS = '  https://example.com  ,  http://localhost:3000  ';
       process.env.NODE_ENV = 'development';
 
       const origins = parseAllowedOrigins();
@@ -159,16 +158,14 @@ describe('CORS Policy', () => {
 
     it('should pass validation in production with valid origins', () => {
       process.env.NODE_ENV = 'production';
-      process.env.CORS_ORIGINS =
-        'https://example.com,https://www.example.com';
+      process.env.CORS_ORIGINS = 'https://example.com,https://www.example.com';
 
       expect(() => validateCORSConfig()).not.toThrow();
     });
 
     it('should filter out invalid origins but allow valid ones', () => {
       process.env.NODE_ENV = 'production';
-      process.env.CORS_ORIGINS =
-        'https://example.com,not-a-url,https://api.example.com';
+      process.env.CORS_ORIGINS = 'https://example.com,not-a-url,https://api.example.com';
 
       const origins = validateCORSConfig();
 
@@ -181,8 +178,7 @@ describe('CORS Policy', () => {
 
   describe('Origin Checking', () => {
     beforeEach(() => {
-      process.env.CORS_ORIGINS =
-        'https://example.com,http://localhost:3000,http://localhost:3005';
+      process.env.CORS_ORIGINS = 'https://example.com,http://localhost:3000,http://localhost:3005';
       process.env.NODE_ENV = 'production';
     });
 
@@ -275,9 +271,7 @@ describe('CORS Policy', () => {
 
       const next = jest.fn();
 
-      const corsError = new Error(
-        "Origin 'https://evil.com' not allowed by CORS policy"
-      );
+      const corsError = new Error("Origin 'https://evil.com' not allowed by CORS policy");
 
       corsErrorHandler(corsError, req, res, next);
 
@@ -334,8 +328,7 @@ describe('CORS Policy', () => {
 
   describe('getAllowedOrigins', () => {
     it('should return cached allowed origins', () => {
-      process.env.CORS_ORIGINS =
-        'https://example.com,http://localhost:3000';
+      process.env.CORS_ORIGINS = 'https://example.com,http://localhost:3000';
       process.env.NODE_ENV = 'production';
 
       const origins = getAllowedOrigins();
@@ -410,8 +403,7 @@ describe('CORS Policy', () => {
   describe('Security Requirements', () => {
     it('should require HTTPS in production origins', () => {
       process.env.NODE_ENV = 'production';
-      process.env.CORS_ORIGINS =
-        'https://example.com,http://insecure.com';
+      process.env.CORS_ORIGINS = 'https://example.com,http://insecure.com';
 
       const origins = validateCORSConfig();
 
@@ -474,9 +466,7 @@ describe('CORS Policy', () => {
       } catch (error) {
         expect(error.message).toContain('CORS_ORIGINS must be set');
         expect(error.message).toContain('production environment');
-        expect(error.message).toContain(
-          'CORS_ORIGINS=https://yourdomain.com'
-        );
+        expect(error.message).toContain('CORS_ORIGINS=https://yourdomain.com');
       }
     });
 

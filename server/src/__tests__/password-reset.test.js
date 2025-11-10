@@ -153,9 +153,7 @@ describe('Password Reset Security', () => {
       // Make multiple requests in quick succession
       const requests = [];
       for (let i = 0; i < 5; i++) {
-        requests.push(
-          request(app).post('/api/auth/request-reset').send({ email: testUser.email })
-        );
+        requests.push(request(app).post('/api/auth/request-reset').send({ email: testUser.email }));
       }
 
       const responses = await Promise.all(requests);
@@ -251,15 +249,9 @@ describe('Password Reset Security', () => {
 
       // Attempt to use token multiple times concurrently
       const resetPromises = [
-        request(app)
-          .post('/api/auth/reset')
-          .send({ token, newPassword: 'Password1!' }),
-        request(app)
-          .post('/api/auth/reset')
-          .send({ token, newPassword: 'Password2!' }),
-        request(app)
-          .post('/api/auth/reset')
-          .send({ token, newPassword: 'Password3!' }),
+        request(app).post('/api/auth/reset').send({ token, newPassword: 'Password1!' }),
+        request(app).post('/api/auth/reset').send({ token, newPassword: 'Password2!' }),
+        request(app).post('/api/auth/reset').send({ token, newPassword: 'Password3!' }),
       ];
 
       const results = await Promise.all(resetPromises);
@@ -400,10 +392,7 @@ describe('Password Reset Security', () => {
 
       // Tamper with token by modifying payload
       const decoded = jwt.decode(token);
-      const tamperedToken = jwt.sign(
-        { ...decoded, userId: 'different-user-id' },
-        'wrong-secret'
-      );
+      const tamperedToken = jwt.sign({ ...decoded, userId: 'different-user-id' }, 'wrong-secret');
 
       const response = await request(app)
         .post('/api/auth/reset')

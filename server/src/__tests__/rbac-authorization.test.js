@@ -788,11 +788,7 @@ describe('RBAC Authorization - Negative Path Testing', () => {
     });
 
     it('should return consistent 403 errors across all unauthorized routes', async () => {
-      const routes = [
-        '/api/test-rbac/admin',
-        '/api/test-rbac/moderator',
-        '/api/test-rbac/faculty',
-      ];
+      const routes = ['/api/test-rbac/admin', '/api/test-rbac/moderator', '/api/test-rbac/faculty'];
 
       for (const route of routes) {
         const response = await request(app)

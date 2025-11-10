@@ -119,12 +119,7 @@ describe('Token Security', () => {
   describe('Reused Token Detection (Security Breach)', () => {
     it('should detect reused refresh token and revoke all device tokens', async () => {
       // Generate initial token
-      const token1 = await generateRefreshToken(
-        testUserId,
-        'breach-device',
-        '127.0.0.1',
-        'Jest'
-      );
+      const token1 = await generateRefreshToken(testUserId, 'breach-device', '127.0.0.1', 'Jest');
 
       // Rotate to get token2
       const rotation1 = await rotateRefreshToken(token1, '127.0.0.1', 'Jest');
@@ -241,24 +236,14 @@ describe('Token Security', () => {
   describe('Per-Device Token Tracking', () => {
     it('should track tokens per device', async () => {
       // Generate tokens for multiple devices
-      const token1 = await generateRefreshToken(
-        testUserId,
-        'device-alpha',
-        '127.0.0.1',
-        'Chrome'
-      );
+      const token1 = await generateRefreshToken(testUserId, 'device-alpha', '127.0.0.1', 'Chrome');
       const token2 = await generateRefreshToken(
         testUserId,
         'device-beta',
         '192.168.1.1',
         'Firefox'
       );
-      const token3 = await generateRefreshToken(
-        testUserId,
-        'device-gamma',
-        '10.0.0.1',
-        'Safari'
-      );
+      const token3 = await generateRefreshToken(testUserId, 'device-gamma', '10.0.0.1', 'Safari');
 
       expect(token1).toBeDefined();
       expect(token2).toBeDefined();

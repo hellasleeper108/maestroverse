@@ -8,7 +8,6 @@ import { authenticate } from '../middleware/auth.js';
 import {
   generateAccessToken,
   generateRefreshToken,
-  verifyRefreshToken,
   revokeRefreshToken,
   revokeAllUserTokens,
   revokeDeviceToken,
@@ -30,7 +29,6 @@ import { csrfProtection } from '../middleware/csrfProtection.js';
 import {
   createPasswordResetToken,
   validatePasswordResetToken,
-  consumePasswordResetToken,
   RESET_TOKEN_EXPIRY_MINUTES,
 } from '../utils/passwordReset.js';
 import { isDemoUser, areDemoLoginsAllowed } from '../utils/demoGuard.js';
@@ -506,11 +504,7 @@ router.post('/request-reset', passwordResetRateLimiter, async (req, res) => {
     }
 
     // Create password reset token
-    const { token, expiresAt } = await createPasswordResetToken(
-      user.id,
-      ipAddress,
-      userAgent
-    );
+    const { token, expiresAt } = await createPasswordResetToken(user.id, ipAddress, userAgent);
 
     // TODO: Send email with reset link
     // In production, you would send an email here with a link like:

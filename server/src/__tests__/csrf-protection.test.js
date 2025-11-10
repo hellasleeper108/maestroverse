@@ -213,12 +213,10 @@ describe('CSRF Protection', () => {
       const newAccessToken = newAccessTokenCookie.split('accessToken=')[1].split(';')[0];
 
       // Get fresh CSRF token
-      const csrfResponse = await request(app)
+      await request(app)
         .get('/api/auth/csrf')
         .set('Cookie', `accessToken=${newAccessToken}`)
         .expect(200);
-
-      const newCsrfToken = csrfResponse.body.csrfToken;
 
       // Attempt PUT without CSRF (would fail if route exists and uses csrfProtection)
       // For demonstration, we'll test a hypothetical endpoint
@@ -242,24 +240,20 @@ describe('CSRF Protection', () => {
         password: 'CSRFTestPassword123!',
       });
 
-      const bearerToken = loginResponse.body.token;
-
       // POST using Authorization header (no CSRF needed)
       const response = await request(app)
         .post('/api/auth/logout')
-        .set('Authorization', `Bearer ${bearerToken}`)
+        .set('Authorization', `Bearer ${loginResponse.body.token}`)
         .expect(200);
 
       expect(response.body.message).toBe('Logged out successfully');
     });
 
     it('should NOT require CSRF token for PUT with Bearer token', async () => {
-      const loginResponse = await request(app).post('/api/auth/login').send({
+      await request(app).post('/api/auth/login').send({
         emailOrUsername: 'csrftest@maestro.edu',
         password: 'CSRFTestPassword123!',
       });
-
-      const bearerToken = loginResponse.body.token;
 
       // Bearer token should bypass CSRF on all unsafe methods
       // (Actual test depends on route implementation)
@@ -279,15 +273,12 @@ describe('CSRF Protection', () => {
 
     it('should NOT require CSRF token for HEAD requests', async () => {
       // HEAD requests are safe
-      const response = await request(app)
-        .head('/health')
-        .set('Cookie', `accessToken=${accessToken}`)
-        .expect(200);
+      await request(app).head('/health').set('Cookie', `accessToken=${accessToken}`).expect(200);
     });
 
     it('should NOT require CSRF token for OPTIONS requests', async () => {
       // OPTIONS requests are safe
-      const response = await request(app)
+      await request(app)
         .options('/api/auth/me')
         .set('Cookie', `accessToken=${accessToken}`)
         .expect(200);
@@ -330,9 +321,7 @@ describe('CSRF Protection', () => {
   describe('CSRF Protection - Unauthenticated Requests', () => {
     it('should handle CSRF validation gracefully for unauthenticated requests', async () => {
       // POST without any authentication
-      const response = await request(app)
-        .post('/api/auth/logout')
-        .expect(401); // Should fail with auth error, not CSRF error
+      await request(app).post('/api/auth/logout').expect(401); // Should fail with auth error, not CSRF error
 
       // The exact error depends on route implementation
       // If authenticate middleware runs before CSRF, we get auth error

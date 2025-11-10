@@ -247,9 +247,7 @@ describe('Layered Rate Limiting', () => {
 
       expect(auditLogs.length).toBeGreaterThan(0);
 
-      const lockoutLog = auditLogs.find((log) =>
-        log.details.includes('auditlogtest@maestro.edu')
-      );
+      const lockoutLog = auditLogs.find((log) => log.details.includes('auditlogtest@maestro.edu'));
 
       expect(lockoutLog).toBeDefined();
       expect(lockoutLog.severity).toBe('HIGH');
@@ -364,10 +362,12 @@ describe('Layered Rate Limiting', () => {
 
       // Exhaust IP-based rate limit
       for (let i = 0; i < maxAttempts; i++) {
-        await request(app).post('/api/auth/login').send({
-          emailOrUsername: `test${i}@maestro.edu`,
-          password: 'WrongPassword',
-        });
+        await request(app)
+          .post('/api/auth/login')
+          .send({
+            emailOrUsername: `test${i}@maestro.edu`,
+            password: 'WrongPassword',
+          });
       }
 
       // Even with a new identifier, should be blocked by IP limit
@@ -439,7 +439,6 @@ describe('Layered Rate Limiting', () => {
       // This test would require mocking database errors
       // The rateLimiter middleware is designed to fail open (allow request)
       // if the database is unavailable to prevent accidental DoS
-
       // Verify the middleware exists and handles errors gracefully
       // (Actual testing would require dependency injection or mocking)
     });

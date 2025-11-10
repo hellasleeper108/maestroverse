@@ -120,13 +120,15 @@ if (isProd) {
   app.use((req, res, next) => {
     if (!req.secure) {
       // Validate host against allowed origins to prevent open redirect vulnerability
-      const allowedHosts = allowedOrigins.map((origin) => {
-        try {
-          return new URL(origin).host;
-        } catch {
-          return null;
-        }
-      }).filter(Boolean);
+      const allowedHosts = allowedOrigins
+        .map((origin) => {
+          try {
+            return new URL(origin).host;
+          } catch {
+            return null;
+          }
+        })
+        .filter(Boolean);
 
       const requestHost = req.headers.host;
 

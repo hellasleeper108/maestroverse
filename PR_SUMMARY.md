@@ -16,30 +16,34 @@ This PR implements comprehensive security hardening for Maestroverse with **6 ma
 ### 1. 🔐 CSRF Protection (Commit: `e7f07eb`)
 
 **What it does:**
+
 - Protects against Cross-Site Request Forgery attacks
 - Double-submit token pattern with JWT signing
 - Required for unsafe HTTP methods (POST/PUT/PATCH/DELETE) when using cookie authentication
 - Bearer token auth automatically bypassed (not vulnerable to CSRF)
 
 **Key Components:**
+
 - `server/src/utils/csrf.js` - Token generation and verification
 - `server/src/middleware/csrfProtection.js` - Express middleware
 - `GET /api/auth/csrf` - Token issuance endpoint
 - `server/src/__tests__/csrf-protection.test.js` - **30+ tests**
 
 **Security Features:**
+
 - JWT-signed tokens (1-hour expiry)
 - Per-user token isolation
 - Automatic detection of authentication method
 - Safe methods (GET/HEAD/OPTIONS) bypass validation
 
 **Breaking Change:**
+
 ```javascript
 // Frontend must include CSRF token for unsafe methods with cookies
-const { csrfToken } = await fetch('/api/auth/csrf').then(r => r.json());
+const { csrfToken } = await fetch('/api/auth/csrf').then((r) => r.json());
 fetch('/api/endpoint', {
   method: 'POST',
-  headers: { 'X-CSRF-Token': csrfToken }
+  headers: { 'X-CSRF-Token': csrfToken },
 });
 ```
 
@@ -48,6 +52,7 @@ fetch('/api/endpoint', {
 ### 2. 🚦 Layered Rate Limiting (Commit: `eb6f812`)
 
 **What it does:**
+
 - Multi-layer protection against brute force attacks
 - Per-IP + per-identifier (email/username) buckets
 - Exponential backoff on repeated violations
@@ -55,6 +60,7 @@ fetch('/api/endpoint', {
 - Account lockout with audit logging
 
 **Key Components:**
+
 - `server/src/middleware/rateLimiter.js` - Layered rate limiting (625 lines)
 - `server/prisma/schema.prisma` - AccountLockout + enhanced AuditLog models
 - `server/RATE_LIMITING.md` - Comprehensive documentation (300+ lines)
@@ -69,6 +75,7 @@ fetch('/api/endpoint', {
 | Global API | 1000 requests | 15 min | N/A |
 
 **Features:**
+
 - Exponential backoff: `duration = windowMs × (multiplier ^ violations)`
 - CAPTCHA flag after 3 failures (advisory)
 - Database-backed (distributed-friendly)
@@ -76,6 +83,7 @@ fetch('/api/endpoint', {
 - Auto-clear on successful login
 
 **Environment Variables:**
+
 ```bash
 RATE_LIMIT_WINDOW_MS=300000           # 5 minutes
 RATE_LIMIT_MAX_ATTEMPTS=5             # Max attempts
@@ -88,17 +96,20 @@ RATE_LIMIT_LOCKOUT_THRESHOLD=10       # Lockout threshold
 ### 3. 🌐 Strict CORS Policy (Commit: `3a2eb58`)
 
 **What it does:**
+
 - Enforces strict Cross-Origin Resource Sharing policy
 - Whitelist-based origin validation
 - **Server FAILS TO START** if misconfigured in production
-- Wildcard (*) PROHIBITED in production
+- Wildcard (\*) PROHIBITED in production
 
 **Key Components:**
+
 - `server/src/config/cors.js` - CORS configuration and validation
 - `server/src/index.js` - Startup validation
 - `server/src/__tests__/cors-policy.test.js` - **50+ tests**
 
 **Security Features:**
+
 - Production startup validation (fails boot if missing/invalid)
 - Whitelist-only origin matching
 - Credentials blocked for unknown origins
@@ -106,6 +117,7 @@ RATE_LIMIT_LOCKOUT_THRESHOLD=10       # Lockout threshold
 - No subdomain wildcards
 
 **CRITICAL - Server Won't Start Without:**
+
 ```bash
 # Production requires explicit CORS_ORIGINS
 NODE_ENV=production
@@ -113,6 +125,7 @@ CORS_ORIGINS=https://yourdomain.com,https://api.yourdomain.com
 ```
 
 **Startup Behavior:**
+
 ```bash
 # Missing CORS_ORIGINS in production
 ❌ CRITICAL SECURITY ERROR - Server startup aborted
@@ -128,21 +141,25 @@ CORS_ORIGINS=https://yourdomain.com,https://api.yourdomain.com
 ### 4. 👮 RBAC Negative-Path Testing (Commit: `11934e8`)
 
 **What it does:**
+
 - Comprehensive Role-Based Access Control testing
 - Validates permission boundaries between roles
 - Ensures role changes take effect IMMEDIATELY (no stale JWT claims)
 - Tests ALL permission denial scenarios
 
 **Key Components:**
+
 - `server/src/routes/test-rbac.js` - Test routes (dev/test only)
 - `server/src/__tests__/rbac-authorization.test.js` - **100+ tests**
 
 **Role Hierarchy Tested:**
+
 ```
 STUDENT < FACULTY < MODERATOR < ADMIN
 ```
 
 **Test Coverage:**
+
 - ✅ Students CANNOT access admin routes (403)
 - ✅ Students CANNOT access moderator routes (403)
 - ✅ Moderators CAN access mod routes
@@ -155,6 +172,7 @@ STUDENT < FACULTY < MODERATOR < ADMIN
 - ✅ All HTTP methods tested (GET/POST/PUT/PATCH/DELETE)
 
 **Critical Security Test:**
+
 ```javascript
 // Role upgrade takes effect IMMEDIATELY
 user.role = 'STUDENT';
@@ -166,6 +184,7 @@ GET /admin → 200 OK ✅  // Next request, no JWT caching
 ```
 
 **Implementation:**
+
 - Database fetch on every request (no role caching)
 - JWT contains userId only (not role)
 - `authenticate` middleware fetches fresh user data
@@ -176,6 +195,7 @@ GET /admin → 200 OK ✅  // Next request, no JWT caching
 ### 5. 🔑 Secure Password Reset (Commit: `dc2ba4f`)
 
 **What it does:**
+
 - Industry-standard password reset with single-use tokens
 - 15-minute TTL with hashed storage
 - JWT-signed tokens prevent tampering
@@ -183,6 +203,7 @@ GET /admin → 200 OK ✅  // Next request, no JWT caching
 - Token leak resilience
 
 **Key Components:**
+
 - `server/src/utils/passwordReset.js` - Token utilities
 - `POST /api/auth/request-reset` - Request reset token
 - `POST /api/auth/reset` - Reset password with token
@@ -190,6 +211,7 @@ GET /admin → 200 OK ✅  // Next request, no JWT caching
 - `server/src/__tests__/password-reset.test.js` - **80+ tests**
 
 **Security Features:**
+
 - Single-use tokens (marked as used after consumption)
 - 15-minute expiration
 - SHA-256 hashed storage (never plaintext)
@@ -199,6 +221,7 @@ GET /admin → 200 OK ✅  // Next request, no JWT caching
 - Rate limited (3 attempts/15min)
 
 **Token Flow:**
+
 1. User requests reset → Generate random token (32 bytes)
 2. Sign with JWT (userId, tokenId, expiry)
 3. Hash token (SHA-256) and store in database
@@ -210,6 +233,7 @@ GET /admin → 200 OK ✅  // Next request, no JWT caching
 9. Create audit log entry
 
 **Test Coverage:**
+
 - ✅ Valid token password reset
 - ✅ Replay attack (token rejected after first use)
 - ✅ Expired token rejection (15-minute TTL)
@@ -224,12 +248,14 @@ GET /admin → 200 OK ✅  // Next request, no JWT caching
 ### 6. 🛡️ Demo User Protection (Commit: `9ed5dc5`)
 
 **What it does:**
+
 - Protects production from demo accounts with well-known passwords
 - Demo accounts BLOCKED in production by default
 - Seeding fails in production without explicit override
 - Startup warnings if misconfigured
 
 **Protected Accounts:**
+
 ```
 admin@maestro.edu (ADMIN) - password123
 moderator@maestro.edu (MODERATOR) - password123
@@ -240,6 +266,7 @@ carol@maestro.edu (STUDENT) - password123
 ```
 
 **Key Components:**
+
 - `server/src/utils/demoGuard.js` - Protection utilities
 - `server/src/seed.js` - Seed script protection
 - `server/src/routes/auth.js` - Login protection
@@ -249,14 +276,15 @@ carol@maestro.edu (STUDENT) - password123
 
 **Behavior by Environment:**
 
-| Environment | Seeding | Demo Logins | Notes |
-|-------------|---------|-------------|-------|
-| Development | ✅ Allowed | ✅ Allowed | Works normally |
-| Test | ✅ Allowed | ✅ Allowed | Works normally |
-| Production | ❌ BLOCKED | ❌ BLOCKED | Secure by default |
-| Prod + ALLOW_DEMO=1 | ⚠️ Allowed | ⚠️ Allowed | DANGEROUS! |
+| Environment         | Seeding    | Demo Logins | Notes             |
+| ------------------- | ---------- | ----------- | ----------------- |
+| Development         | ✅ Allowed | ✅ Allowed  | Works normally    |
+| Test                | ✅ Allowed | ✅ Allowed  | Works normally    |
+| Production          | ❌ BLOCKED | ❌ BLOCKED  | Secure by default |
+| Prod + ALLOW_DEMO=1 | ⚠️ Allowed | ⚠️ Allowed  | DANGEROUS!        |
 
 **Production Protection:**
+
 ```bash
 # Seeding blocked in production
 NODE_ENV=production npm run db:seed
@@ -272,6 +300,7 @@ curl -X POST /api/auth/login \
 ```
 
 **Startup Warning:**
+
 ```
 ⚠️  WARNING: Demo accounts enabled in production!
 ALLOW_DEMO=1 is set in production environment.
@@ -289,12 +318,14 @@ Demo accounts:
 ## 📊 Statistics
 
 ### Code Changes
+
 - **Files Changed**: 30+
 - **Lines Added**: 4,500+
 - **Lines Removed**: 100+
 - **Net Addition**: 4,400+ lines
 
 ### Testing
+
 - **Total Tests Added**: 300+
 - **CSRF Protection**: 30+ tests
 - **Rate Limiting**: 25+ tests
@@ -305,6 +336,7 @@ Demo accounts:
 - **Test Coverage**: Positive paths, negative paths, edge cases, security scenarios
 
 ### Documentation
+
 - **New Documentation Files**: 2 (800+ lines)
   - `server/RATE_LIMITING.md` (300+ lines)
   - `server/DEMO_USER_PROTECTION.md` (500+ lines)
@@ -318,29 +350,32 @@ Demo accounts:
 
 ### Attack Vectors Mitigated
 
-| Attack Type | Protection | Status |
-|-------------|------------|--------|
-| CSRF Attacks | Double-submit JWT tokens | ✅ |
-| Brute Force | Layered rate limiting + exponential backoff | ✅ |
-| Account Enumeration | Consistent errors + rate limiting | ✅ |
-| Replay Attacks | Single-use tokens + JWT expiry | ✅ |
-| Token Tampering | JWT signature verification | ✅ |
-| Session Hijacking | Refresh token rotation | ✅ |
-| CORS Bypass | Strict whitelist validation | ✅ |
-| Privilege Escalation | RBAC with immediate role changes | ✅ |
-| Demo Account Abuse | Production blocking | ✅ |
-| Token Leakage | Hashed storage + single-use | ✅ |
+| Attack Type          | Protection                                  | Status |
+| -------------------- | ------------------------------------------- | ------ |
+| CSRF Attacks         | Double-submit JWT tokens                    | ✅     |
+| Brute Force          | Layered rate limiting + exponential backoff | ✅     |
+| Account Enumeration  | Consistent errors + rate limiting           | ✅     |
+| Replay Attacks       | Single-use tokens + JWT expiry              | ✅     |
+| Token Tampering      | JWT signature verification                  | ✅     |
+| Session Hijacking    | Refresh token rotation                      | ✅     |
+| CORS Bypass          | Strict whitelist validation                 | ✅     |
+| Privilege Escalation | RBAC with immediate role changes            | ✅     |
+| Demo Account Abuse   | Production blocking                         | ✅     |
+| Token Leakage        | Hashed storage + single-use                 | ✅     |
 
 ### Production Safety Checks
 
 **Server Will NOT START if:**
+
 - `NODE_ENV=production` and `CORS_ORIGINS` is empty/invalid
-- Wildcard (*) found in production CORS_ORIGINS
+- Wildcard (\*) found in production CORS_ORIGINS
 
 **Server Shows CRITICAL WARNING if:**
+
 - `ALLOW_DEMO=1` is set in production (lists all demo credentials)
 
 **Operations BLOCKED in Production:**
+
 - Database seeding (unless `ALLOW_DEMO=1`)
 - Demo user logins (unless `ALLOW_DEMO=1`)
 
@@ -349,32 +384,37 @@ Demo accounts:
 ## 💥 Breaking Changes
 
 ### 1. CSRF Protection
+
 **Impact**: Frontend must include CSRF token for unsafe methods with cookie auth
 
 **Before:**
+
 ```javascript
 fetch('/api/endpoint', {
   method: 'POST',
-  body: JSON.stringify(data)
+  body: JSON.stringify(data),
 });
 ```
 
 **After:**
+
 ```javascript
-const { csrfToken } = await fetch('/api/auth/csrf').then(r => r.json());
+const { csrfToken } = await fetch('/api/auth/csrf').then((r) => r.json());
 fetch('/api/endpoint', {
   method: 'POST',
   headers: { 'X-CSRF-Token': csrfToken },
-  body: JSON.stringify(data)
+  body: JSON.stringify(data),
 });
 ```
 
 **Note**: Bearer token auth is unaffected
 
 ### 2. CORS Configuration
+
 **Impact**: Production requires explicit CORS_ORIGINS
 
 **Required in `.env`:**
+
 ```bash
 NODE_ENV=production
 CORS_ORIGINS=https://yourdomain.com,https://www.yourdomain.com
@@ -383,17 +423,21 @@ CORS_ORIGINS=https://yourdomain.com,https://www.yourdomain.com
 **Behavior**: Server exits on startup if missing
 
 ### 3. Rate Limiting
+
 **Impact**: More aggressive limits on auth endpoints
 
 **Changes:**
+
 - Login: 5 attempts/5min → exponential backoff
 - Account lockout after 10 failed attempts (1 hour)
 - Rate limit headers exposed in responses
 
 ### 4. Demo Users
+
 **Impact**: Demo accounts blocked in production
 
 **Changes:**
+
 - Seeding fails in production
 - Demo logins return 403
 - Requires `ALLOW_DEMO=1` override (dangerous)
@@ -405,6 +449,7 @@ CORS_ORIGINS=https://yourdomain.com,https://www.yourdomain.com
 ### Step 1: Update Environment Variables
 
 **Production `.env`:**
+
 ```bash
 # REQUIRED - Server won't start without this
 CORS_ORIGINS=https://yourdomain.com,https://www.yourdomain.com
@@ -425,45 +470,53 @@ npx prisma migrate deploy
 ```
 
 **New Tables:**
+
 - `PasswordResetToken` - Single-use reset tokens
 - `AccountLockout` - Rate limit lockouts
 
 **Updated Tables:**
+
 - `AuditLog` - Added event, details, severity, timestamp fields
 
 ### Step 3: Update Frontend (CSRF)
 
 **After login:**
+
 ```javascript
 // Fetch CSRF token (expires in 1 hour)
 const { csrfToken } = await fetch('/api/auth/csrf', {
-  headers: { Authorization: `Bearer ${accessToken}` }
-}).then(r => r.json());
+  headers: { Authorization: `Bearer ${accessToken}` },
+}).then((r) => r.json());
 
 // Store token (localStorage or state)
 localStorage.setItem('csrfToken', csrfToken);
 ```
 
 **For unsafe requests:**
+
 ```javascript
 fetch('/api/endpoint', {
   method: 'POST',
   headers: {
-    'Authorization': `Bearer ${accessToken}`,
+    Authorization: `Bearer ${accessToken}`,
     'X-CSRF-Token': csrfToken,
-    'Content-Type': 'application/json'
+    'Content-Type': 'application/json',
   },
-  body: JSON.stringify(data)
+  body: JSON.stringify(data),
 });
 ```
 
 **Token refresh:**
+
 ```javascript
 // Refresh CSRF token every 30 minutes (before 1-hour expiry)
-setInterval(async () => {
-  const { csrfToken } = await fetch('/api/auth/csrf').then(r => r.json());
-  localStorage.setItem('csrfToken', csrfToken);
-}, 30 * 60 * 1000);
+setInterval(
+  async () => {
+    const { csrfToken } = await fetch('/api/auth/csrf').then((r) => r.json());
+    localStorage.setItem('csrfToken', csrfToken);
+  },
+  30 * 60 * 1000
+);
 ```
 
 ### Step 4: Test Production Safety
@@ -603,13 +656,13 @@ Tests:       300+ passed, 300+ total
 
 ### Measured Overhead
 
-| Feature | Overhead | Notes |
-|---------|----------|-------|
-| CSRF Validation | ~1ms | JWT verification per request |
-| Rate Limiting | ~2ms | Database lookup (cached) |
-| CORS Validation | <1ms | In-memory whitelist check |
-| RBAC | 0ms | Already in `authenticate` middleware |
-| **Total** | **~2-3ms** | Per authenticated request |
+| Feature         | Overhead   | Notes                                |
+| --------------- | ---------- | ------------------------------------ |
+| CSRF Validation | ~1ms       | JWT verification per request         |
+| Rate Limiting   | ~2ms       | Database lookup (cached)             |
+| CORS Validation | <1ms       | In-memory whitelist check            |
+| RBAC            | 0ms        | Already in `authenticate` middleware |
+| **Total**       | **~2-3ms** | Per authenticated request            |
 
 ### Optimizations
 

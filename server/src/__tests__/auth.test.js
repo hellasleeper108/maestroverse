@@ -5,7 +5,6 @@
 
 import request from 'supertest';
 import express from 'express';
-import { PrismaClient } from '@prisma/client';
 import authRoutes from '../routes/auth.js';
 import { prisma } from './setup.js';
 
@@ -93,11 +92,9 @@ describe('Authentication API', () => {
   });
 
   describe('POST /api/auth/login', () => {
-    let testUser;
-
     beforeAll(async () => {
       // Create a test user
-      const response = await request(app)
+      await request(app)
         .post('/api/auth/register')
         .send({
           email: 'logintest@maestro.edu',
@@ -107,8 +104,6 @@ describe('Authentication API', () => {
           lastName: 'Test',
         })
         .expect(201);
-
-      testUser = response.body.user;
     });
 
     it('should login with email and password', async () => {
@@ -178,7 +173,6 @@ describe('Authentication API', () => {
 
   describe('GET /api/auth/me', () => {
     let authToken;
-    let testUser;
 
     beforeAll(async () => {
       // Register and login
@@ -202,7 +196,6 @@ describe('Authentication API', () => {
         .expect(200);
 
       authToken = loginResponse.body.token;
-      testUser = loginResponse.body.user;
     });
 
     it('should return current user with valid token', async () => {

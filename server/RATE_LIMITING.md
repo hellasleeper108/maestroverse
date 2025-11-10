@@ -15,6 +15,7 @@ The rate limiting system employs **three layers of protection**:
 3. **Account Lockout**: Temporary account suspension after excessive failures
 
 For login endpoints, **both IP and identifier limits must be satisfied** simultaneously. This prevents:
+
 - A single IP from attacking multiple accounts
 - A single account from being attacked from multiple IPs
 
@@ -34,27 +35,27 @@ For login endpoints, **both IP and identifier limits must be satisfied** simulta
 
 ### Core Configuration
 
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `RATE_LIMIT_WINDOW_MS` | 300000 (5 min) | Duration of rate limit window in milliseconds |
-| `RATE_LIMIT_MAX_ATTEMPTS` | 5 | Maximum attempts allowed per window |
-| `RATE_LIMIT_BACKOFF_MULTIPLIER` | 2 | Exponential backoff multiplier |
-| `RATE_LIMIT_MAX_BACKOFF_MS` | 7200000 (2 hrs) | Maximum backoff duration |
+| Variable                        | Default         | Description                                   |
+| ------------------------------- | --------------- | --------------------------------------------- |
+| `RATE_LIMIT_WINDOW_MS`          | 300000 (5 min)  | Duration of rate limit window in milliseconds |
+| `RATE_LIMIT_MAX_ATTEMPTS`       | 5               | Maximum attempts allowed per window           |
+| `RATE_LIMIT_BACKOFF_MULTIPLIER` | 2               | Exponential backoff multiplier                |
+| `RATE_LIMIT_MAX_BACKOFF_MS`     | 7200000 (2 hrs) | Maximum backoff duration                      |
 
 ### CAPTCHA & Lockout
 
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `RATE_LIMIT_CAPTCHA_THRESHOLD` | 3 | Failures before CAPTCHA required |
-| `RATE_LIMIT_LOCKOUT_THRESHOLD` | 10 | Failures before account lockout |
-| `RATE_LIMIT_LOCKOUT_DURATION_MS` | 3600000 (1 hr) | Account lockout duration |
+| Variable                         | Default        | Description                      |
+| -------------------------------- | -------------- | -------------------------------- |
+| `RATE_LIMIT_CAPTCHA_THRESHOLD`   | 3              | Failures before CAPTCHA required |
+| `RATE_LIMIT_LOCKOUT_THRESHOLD`   | 10             | Failures before account lockout  |
+| `RATE_LIMIT_LOCKOUT_DURATION_MS` | 3600000 (1 hr) | Account lockout duration         |
 
 ### Global API Limits
 
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `GLOBAL_RATE_LIMIT_MAX` | 1000 | Max requests for global API limiter |
-| `GLOBAL_RATE_LIMIT_WINDOW_MIN` | 15 | Window duration in minutes |
+| Variable                       | Default | Description                         |
+| ------------------------------ | ------- | ----------------------------------- |
+| `GLOBAL_RATE_LIMIT_MAX`        | 1000    | Max requests for global API limiter |
+| `GLOBAL_RATE_LIMIT_WINDOW_MIN` | 15      | Window duration in minutes          |
 
 ---
 
@@ -110,13 +111,13 @@ Capped at `RATE_LIMIT_MAX_BACKOFF_MS` (default: 2 hours)
 
 ### Example (5-minute window, multiplier=2)
 
-| Violation | Backoff Duration |
-|-----------|------------------|
-| 1st | 5 minutes |
-| 2nd | 10 minutes |
-| 3rd | 20 minutes |
-| 4th | 40 minutes |
-| 5th+ | 80 minutes (capped at 2 hours) |
+| Violation | Backoff Duration               |
+| --------- | ------------------------------ |
+| 1st       | 5 minutes                      |
+| 2nd       | 10 minutes                     |
+| 3rd       | 20 minutes                     |
+| 4th       | 40 minutes                     |
+| 5th+      | 80 minutes (capped at 2 hours) |
 
 ### Response
 
@@ -275,7 +276,11 @@ model AuditLog {
 ### Applying Rate Limiters
 
 ```javascript
-import { loginRateLimiter, registerRateLimiter, globalApiLimiter } from '../middleware/rateLimiter.js';
+import {
+  loginRateLimiter,
+  registerRateLimiter,
+  globalApiLimiter,
+} from '../middleware/rateLimiter.js';
 
 // Login endpoint (layered rate limiting)
 router.post('/login', loginRateLimiter, async (req, res) => {
@@ -413,7 +418,8 @@ LIMIT 20;
 The system handles proxies and load balancers by checking multiple headers:
 
 ```javascript
-const ip = req.ip ||
+const ip =
+  req.ip ||
   req.headers['x-forwarded-for']?.split(',')[0]?.trim() ||
   req.headers['x-real-ip'] ||
   req.connection?.remoteAddress ||
@@ -433,6 +439,7 @@ If the database is unavailable, the middleware **fails open** (allows request) t
 ### Account Enumeration
 
 Layered rate limiting helps prevent account enumeration attacks by:
+
 - Limiting attempts per identifier (prevents testing many passwords on one account)
 - Limiting attempts per IP (prevents testing many accounts from one IP)
 
@@ -443,6 +450,7 @@ Layered rate limiting helps prevent account enumeration attacks by:
 ### Issue: Rate limits not applying
 
 **Check:**
+
 1. Middleware is applied to routes
 2. Database connection is working
 3. Environment variables are loaded
@@ -450,6 +458,7 @@ Layered rate limiting helps prevent account enumeration attacks by:
 ### Issue: Users locked out unexpectedly
 
 **Check:**
+
 1. `RATE_LIMIT_LOCKOUT_THRESHOLD` is not too low
 2. Audit logs for lockout events
 3. Check for distributed brute-force attempts
@@ -457,6 +466,7 @@ Layered rate limiting helps prevent account enumeration attacks by:
 ### Issue: Performance degradation
 
 **Solution:**
+
 - Run `cleanupExpiredRateLimits()` regularly
 - Add database indexes (already included in schema)
 - Consider Redis for high-traffic scenarios

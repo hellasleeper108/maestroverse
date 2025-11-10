@@ -20,6 +20,7 @@ The demo user protection system safeguards production environments from demo acc
 ### What Could Go Wrong
 
 Without protection, attackers could:
+
 - Log in as `admin@maestro.edu` with `password123`
 - Access admin panel and delete/suspend accounts
 - Modify platform data
@@ -55,20 +56,25 @@ Without protection, attackers could:
 ### Complete List
 
 **Admin Accounts:**
+
 - Email: `admin@maestro.edu`, Username: `admin`, Role: ADMIN
 
 **Moderator Accounts:**
+
 - Email: `moderator@maestro.edu`, Username: `mod_sarah`, Role: MODERATOR
 
 **Faculty Accounts:**
+
 - Email: `faculty@maestro.edu`, Username: `prof_johnson`, Role: FACULTY
 
 **Student Accounts:**
+
 - Email: `alice@maestro.edu`, Username: `alice_wonder`, Role: STUDENT
 - Email: `bob@maestro.edu`, Username: `bob_builder`, Role: STUDENT
 - Email: `carol@maestro.edu`, Username: `carol_creative`, Role: STUDENT
 
 **All Accounts:**
+
 - Password: `password123`
 - Created by: `server/src/seed.js`
 - Purpose: Development and testing only
@@ -114,12 +120,14 @@ Demo accounts are completely inaccessible.
 ### Running Seed Script
 
 **Development:**
+
 ```bash
 npm run db:seed
 # ✅ Works normally
 ```
 
 **Production (Blocked):**
+
 ```bash
 NODE_ENV=production npm run db:seed
 # ❌ Exits with error:
@@ -128,6 +136,7 @@ NODE_ENV=production npm run db:seed
 ```
 
 **Production (Override - Dangerous):**
+
 ```bash
 NODE_ENV=production ALLOW_DEMO=1 npm run db:seed
 # ⚠️ Shows 5-second warning, then seeds
@@ -137,6 +146,7 @@ NODE_ENV=production ALLOW_DEMO=1 npm run db:seed
 ### Login Attempts
 
 **Development:**
+
 ```bash
 curl -X POST http://localhost:3001/api/auth/login \
   -H "Content-Type: application/json" \
@@ -145,6 +155,7 @@ curl -X POST http://localhost:3001/api/auth/login \
 ```
 
 **Production (Blocked):**
+
 ```bash
 curl -X POST https://api.yourdomain.com/api/auth/login \
   -H "Content-Type: application/json" \
@@ -157,6 +168,7 @@ curl -X POST https://api.yourdomain.com/api/auth/login \
 ```
 
 **Production (Override - Dangerous):**
+
 ```bash
 # With ALLOW_DEMO=1 in .env
 curl -X POST https://api.yourdomain.com/api/auth/login \
@@ -171,50 +183,54 @@ curl -X POST https://api.yourdomain.com/api/auth/login \
 ### Utility Functions
 
 #### `isDemoUser(identifier)`
+
 Check if email or username belongs to a demo account.
 
 ```javascript
 import { isDemoUser } from './utils/demoGuard.js';
 
-isDemoUser('alice@maestro.edu');     // true
-isDemoUser('alice_wonder');          // true
-isDemoUser('ALICE@maestro.edu');     // true (case-insensitive)
-isDemoUser('realuser@example.com');  // false
+isDemoUser('alice@maestro.edu'); // true
+isDemoUser('alice_wonder'); // true
+isDemoUser('ALICE@maestro.edu'); // true (case-insensitive)
+isDemoUser('realuser@example.com'); // false
 ```
 
 #### `isSeedingAllowed()`
+
 Check if seeding is allowed in current environment.
 
 ```javascript
 import { isSeedingAllowed } from './utils/demoGuard.js';
 
 // Development
-isSeedingAllowed();  // true
+isSeedingAllowed(); // true
 
 // Production without ALLOW_DEMO
-isSeedingAllowed();  // false
+isSeedingAllowed(); // false
 
 // Production with ALLOW_DEMO=1
-isSeedingAllowed();  // true
+isSeedingAllowed(); // true
 ```
 
 #### `areDemoLoginsAllowed()`
+
 Check if demo logins are allowed in current environment.
 
 ```javascript
 import { areDemoLoginsAllowed } from './utils/demoGuard.js';
 
 // Development
-areDemoLoginsAllowed();  // true
+areDemoLoginsAllowed(); // true
 
 // Production without ALLOW_DEMO
-areDemoLoginsAllowed();  // false
+areDemoLoginsAllowed(); // false
 
 // Production with ALLOW_DEMO=1
-areDemoLoginsAllowed();  // true
+areDemoLoginsAllowed(); // true
 ```
 
 #### `validateProductionSafety()`
+
 Validate production environment safety. Logs warnings if demo accounts are enabled.
 
 ```javascript
@@ -227,6 +243,7 @@ validateProductionSafety();
 ### Environment Variables
 
 #### `NODE_ENV`
+
 Determines the environment mode.
 
 - `development`: Demo accounts allowed
@@ -234,6 +251,7 @@ Determines the environment mode.
 - `production`: Demo accounts blocked (unless ALLOW_DEMO=1)
 
 #### `ALLOW_DEMO`
+
 Override to allow demo accounts in production.
 
 - Not set: Demo accounts blocked in production (secure)
@@ -246,6 +264,7 @@ Override to allow demo accounts in production.
 ## Testing
 
 ### Run Tests
+
 ```bash
 npm test -- demo-guard.test.js
 ```
@@ -322,6 +341,7 @@ The test suite includes 40+ comprehensive tests:
 ### If You Need Staging Data
 
 **Option 1: Create Real Accounts (Recommended)**
+
 ```bash
 # Use real passwords, not password123
 # Create via registration API
@@ -337,6 +357,7 @@ curl -X POST https://staging.yourdomain.com/api/auth/register \
 ```
 
 **Option 2: Temporary Demo Override (Dangerous)**
+
 ```bash
 # 1. Set ALLOW_DEMO=1 in .env
 echo "ALLOW_DEMO=1" >> .env
@@ -382,6 +403,7 @@ pm2 restart all
 **Immediate Actions:**
 
 1. **Disable Demo Logins**
+
    ```bash
    # Remove ALLOW_DEMO from .env if present
    # Restart server immediately
@@ -389,6 +411,7 @@ pm2 restart all
    ```
 
 2. **Change Demo Passwords**
+
    ```sql
    -- Generate new secure passwords
    UPDATE users
@@ -404,6 +427,7 @@ pm2 restart all
    ```
 
 3. **Check Access Logs**
+
    ```bash
    # Look for suspicious demo account logins
    grep "alice@maestro.edu\|bob@maestro.edu\|admin@maestro.edu" /var/log/app.log
@@ -435,6 +459,7 @@ pm2 restart all
 **Problem**: "SEEDING BLOCKED IN PRODUCTION" in development
 
 **Solution**:
+
 ```bash
 # Check NODE_ENV
 echo $NODE_ENV
@@ -450,6 +475,7 @@ npm run db:seed
 **Problem**: Demo accounts work in production (security issue!)
 
 **Solution**:
+
 ```bash
 # 1. Check environment
 grep ALLOW_DEMO .env
@@ -471,10 +497,11 @@ curl -X POST https://api.yourdomain.com/api/auth/login \
 **Problem**: Real user blocked like demo account
 
 **Solution**:
+
 ```javascript
 // Check if user is mistakenly identified as demo
 import { isDemoUser } from './utils/demoGuard.js';
-console.log(isDemoUser('youruser@example.com'));  // Should be false
+console.log(isDemoUser('youruser@example.com')); // Should be false
 
 // If true, user's email/username matches demo pattern
 // Change user's email or username to something different
@@ -483,15 +510,18 @@ console.log(isDemoUser('youruser@example.com'));  // Should be false
 ## Files
 
 ### Core Implementation
+
 - `server/src/utils/demoGuard.js` - Demo guard utilities
 - `server/src/seed.js` - Seed script with protection
 - `server/src/routes/auth.js` - Login protection
 - `server/src/index.js` - Startup validation
 
 ### Tests
+
 - `server/src/__tests__/demo-guard.test.js` - 40+ comprehensive tests
 
 ### Documentation
+
 - `server/DEMO_USER_PROTECTION.md` - This file
 
 ## Related Documentation

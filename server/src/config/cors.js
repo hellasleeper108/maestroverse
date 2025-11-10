@@ -102,7 +102,9 @@ export function validateCORSConfig() {
 
   // Log configuration
   if (isProd) {
-    console.log(`[CORS] ✓ Production CORS configured with ${allowedOrigins.length} allowed origin(s)`);
+    console.log(
+      `[CORS] ✓ Production CORS configured with ${allowedOrigins.length} allowed origin(s)`
+    );
     console.log(`[CORS] Allowed origins: ${allowedOrigins.join(', ')}`);
   } else {
     console.log(

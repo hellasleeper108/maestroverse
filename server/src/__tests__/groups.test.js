@@ -5,7 +5,6 @@
 
 import request from 'supertest';
 import express from 'express';
-import { PrismaClient } from '@prisma/client';
 import authRoutes from '../routes/auth.js';
 import hubRoutes from '../routes/hub.js';
 import { prisma } from './setup.js';

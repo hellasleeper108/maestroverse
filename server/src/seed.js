@@ -551,8 +551,7 @@ async function main() {
   const threadReplies = await Promise.all([
     prisma.threadReply.create({
       data: {
-        content:
-          'I recommend the official React docs and FreeCodeCamp. Both are excellent!',
+        content: 'I recommend the official React docs and FreeCodeCamp. Both are excellent!',
         threadId: threads[0].id,
         authorId: users[1].id,
       },
