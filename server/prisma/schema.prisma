@@ -49,6 +49,7 @@ model User {
   threads              Thread[]
   threadReplies        ThreadReply[]
   sessions             Session[]
+  refreshTokens        RefreshToken[]
   mfaSecret            MFASecret?
   webAuthnCredentials  WebAuthnCredential[]
   createdChatRooms     ChatRoom[]         @relation("ChatRoomCreator")
@@ -440,6 +441,23 @@ model Session {
 
   @@index([userId])
   @@index([expiresAt])
+}
+
+model RefreshToken {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  userId    String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  isRevoked Boolean  @default(false)
+  ipAddress String?
+  userAgent String?
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([token])
+  @@index([expiresAt])
+  @@index([isRevoked])
 }
 
 model VerificationToken {
