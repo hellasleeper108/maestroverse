@@ -56,6 +56,7 @@ model User {
   createdChatRooms     ChatRoom[]         @relation("ChatRoomCreator")
   chatRoomMemberships  ChatRoomMember[]
   chatMessages         ChatMessage[]
+  passwordResetTokens  PasswordResetToken[]
 
   @@index([email])
   @@index([username])
@@ -595,6 +596,24 @@ model AccountLockout {
 
   @@index([identifier])
   @@index([lockedUntil])
+}
+
+model PasswordResetToken {
+  id         String   @id @default(cuid())
+  userId     String
+  tokenHash  String   @unique // Hashed token - never store plaintext
+  expiresAt  DateTime // 15-minute TTL
+  used       Boolean  @default(false) // Prevent replay attacks
+  usedAt     DateTime? // When token was consumed
+  ipAddress  String? // IP that requested reset
+  userAgent  String? // User agent that requested reset
+  createdAt  DateTime @default(now())
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([tokenHash])
+  @@index([expiresAt])
+  @@index([used])
 }
 
 // ========== ENUMS ==========
