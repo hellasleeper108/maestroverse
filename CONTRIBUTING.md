@@ -10,6 +10,7 @@ Thank you for your interest in contributing to Maestroverse! This document provi
 - [Coding Standards](#coding-standards)
 - [Commit Guidelines](#commit-guidelines)
 - [Pull Request Process](#pull-request-process)
+- [Continuous Integration (CI/CD)](#continuous-integration-cicd)
 - [Security Guidelines](#security-guidelines)
 - [Testing Requirements](#testing-requirements)
 - [Documentation](#documentation)
@@ -553,6 +554,238 @@ git commit -m "Add auth, fix bugs, update docs"
    git checkout main
    git pull upstream main
    ```
+
+## 🤖 Continuous Integration (CI/CD)
+
+Maestroverse uses GitHub Actions for automated testing, linting, and security checks on every pull request.
+
+### Automated Workflows
+
+#### 1. **Main CI Pipeline** (`ci.yml`)
+
+Runs on every pull request and push to `main`/`develop` branches:
+
+**Lint Job:**
+- Runs ESLint to check code quality
+- Verifies Prettier formatting
+- **Fails if linting errors found**
+
+**Test Job:**
+- Sets up PostgreSQL and Redis services
+- Generates Prisma client
+- Runs database migrations
+- Executes all test suites
+- **Fails if any tests fail**
+
+**Build Job:**
+- Builds server application
+- Builds web frontend
+- **Fails if build errors occur**
+
+**Security Job:**
+- Runs `npm audit` to check for vulnerabilities
+- Scans for accidentally committed secrets
+- Provides warnings for security issues
+
+#### 2. **CodeQL Security Analysis** (`codeql.yml`)
+
+- Runs on every PR and weekly on schedule
+- Performs static code analysis for security vulnerabilities
+- Checks for common security issues (SQL injection, XSS, etc.)
+- Results visible in GitHub Security tab
+
+#### 3. **PR Validation Checks** (`pr-checks.yml`)
+
+**PR Title Check:**
+- Validates PR title follows Conventional Commits format
+- Ensures title starts with type: `feat`, `fix`, `docs`, etc.
+- Subject must start with uppercase letter
+
+**PR Size Check:**
+- Warns if PR has >1000 changes
+- **Fails if PR has >2000 changes** (break into smaller PRs)
+
+**PR Labels Check:**
+- Warns if PR has no labels
+- Encourages appropriate labeling
+
+**PR Checklist Check:**
+- Verifies PR description includes security checklist
+- Counts completed checklist items
+- Warns if checklist is incomplete
+
+#### 4. **Dependabot** (`dependabot.yml`)
+
+- Automatically checks for dependency updates weekly
+- Creates PRs for outdated npm packages
+- Updates GitHub Actions versions monthly
+- Groups minor/patch updates together
+
+### Ensuring CI Passes
+
+Before pushing your PR, run these commands locally:
+
+```bash
+# Install dependencies
+npm ci
+
+# Lint code
+npm run lint
+
+# Format code
+npm run format
+
+# Run tests
+npm test
+
+# Run verification suite
+./test-verification.sh
+```
+
+### Understanding CI Failures
+
+#### Lint Failures
+
+```
+❌ Run ESLint
+   Error: 'variable' is defined but never used
+```
+
+**Fix:**
+```bash
+npm run lint -- --fix  # Auto-fix issues
+npm run format        # Format code
+```
+
+#### Test Failures
+
+```
+❌ Run tests
+   FAIL server/src/__tests__/auth.test.js
+   Expected: true, Received: false
+```
+
+**Fix:**
+- Review test output for specific failures
+- Fix the failing tests or update implementation
+- Run `npm test` locally to verify fixes
+
+#### Build Failures
+
+```
+❌ Build web frontend
+   Error: Cannot find module 'missing-package'
+```
+
+**Fix:**
+```bash
+npm install missing-package  # Install missing dependency
+npm run build                # Verify build succeeds
+```
+
+#### PR Title Format Failures
+
+```
+❌ Validate PR Title
+   PR title does not follow Conventional Commits format
+```
+
+**Fix:**
+- Update PR title to format: `type(scope): description`
+- Example: `feat(auth): add OAuth2 support`
+
+### CI Status Badges
+
+Pull requests show CI status for each check:
+
+- ✅ **Green checkmark**: All checks passed
+- ❌ **Red X**: Check failed (must be fixed)
+- 🟡 **Yellow dot**: Check in progress
+- ⚪ **Gray circle**: Check skipped/canceled
+
+### Required CI Checks
+
+The following checks **must pass** before merging:
+
+1. ✅ **Lint**: Code quality and formatting
+2. ✅ **Test**: All test suites pass
+3. ✅ **Build**: Application builds successfully
+4. ✅ **PR Title**: Follows conventional format
+5. ✅ **PR Size**: Not excessively large
+
+**Optional but recommended:**
+- CodeQL Security Analysis
+- npm audit (vulnerabilities check)
+- Secret scanning
+
+### Debugging CI Issues
+
+#### Check CI Logs
+
+1. Go to your PR on GitHub
+2. Click "Details" next to failed check
+3. Expand failed job to see error messages
+4. Review logs for specific failure cause
+
+#### Re-run Failed Jobs
+
+If you believe a failure was due to temporary issues:
+
+1. Fix the issue in your code
+2. Push changes to your PR branch
+3. CI will automatically re-run
+4. Or click "Re-run jobs" in GitHub UI
+
+#### Local CI Simulation
+
+Run the same checks that CI runs:
+
+```bash
+# Install exact dependencies (like CI)
+npm ci
+
+# Run lint (like CI)
+npm run lint
+
+# Check formatting (like CI)
+npm run format -- --check
+
+# Run tests with same env (like CI)
+export NODE_ENV=test
+export DATABASE_URL=postgresql://maestro:maestro123@localhost:5432/maestro_test
+npm test
+
+# Build (like CI)
+npm run build --workspace=server
+npm run build --workspace=apps/web
+```
+
+### CI Performance
+
+- **Lint job**: ~2-3 minutes
+- **Test job**: ~5-7 minutes (includes DB setup)
+- **Build job**: ~3-5 minutes
+- **Total CI time**: ~10-15 minutes
+
+Tips to reduce CI time:
+- Keep PRs focused and small
+- Run tests locally before pushing
+- Fix linting issues before pushing
+- Use `npm ci` for faster installs
+
+### CI Configuration Files
+
+All CI configuration is in `.github/` directory:
+
+```
+.github/
+├── workflows/
+│   ├── ci.yml           # Main CI pipeline
+│   ├── codeql.yml       # Security analysis
+│   └── pr-checks.yml    # PR validation
+├── dependabot.yml       # Dependency updates
+└── pull_request_template.md  # PR template
+```
 
 ## 🔒 Security Guidelines
 
