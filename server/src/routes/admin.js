@@ -2,6 +2,13 @@ import express from 'express';
 import { PrismaClient } from '@prisma/client';
 import { z } from 'zod';
 import { authenticate, authorize } from '../middleware/auth.js';
+import {
+  ROLES,
+  PERMISSIONS,
+  requireAdmin,
+  requireModerator,
+  requirePermission,
+} from '../middleware/rbac.js';
 
 const router = express.Router();
 const prisma = new PrismaClient();
@@ -30,12 +37,17 @@ const banSchema = z.object({
 });
 
 const roleSchema = z.object({
-  role: z.enum(['STUDENT', 'FACULTY', 'ADMIN']),
+  role: z.enum(['STUDENT', 'FACULTY', 'MODERATOR', 'ADMIN']),
 });
 
-router.use(authenticate, authorize('ADMIN'));
+// Note: Individual routes now specify their own authorization
+// Some routes allow MODERATOR access, others require ADMIN
 
-router.get('/users', async (req, res) => {
+/**
+ * GET /api/admin/users
+ * List all users - Moderators and Admins can view
+ */
+router.get('/users', authenticate, requireModerator, async (req, res) => {
   const users = await prisma.user.findMany({
     select: userSummarySelect,
     orderBy: [{ createdAt: 'asc' }],
@@ -43,7 +55,11 @@ router.get('/users', async (req, res) => {
   res.json({ users });
 });
 
-router.post('/users/:id/suspend', async (req, res) => {
+/**
+ * POST /api/admin/users/:id/suspend
+ * Suspend user - Moderators can suspend (temporary)
+ */
+router.post('/users/:id/suspend', authenticate, requirePermission(PERMISSIONS.USER_SUSPEND), async (req, res) => {
   if (req.params.id === req.user.id) {
     return res.status(400).json({ error: 'You cannot suspend yourself.' });
   }
@@ -79,7 +95,11 @@ router.post('/users/:id/suspend', async (req, res) => {
   }
 });
 
-router.post('/users/:id/ban', async (req, res) => {
+/**
+ * POST /api/admin/users/:id/ban
+ * Ban user permanently - Admins only (permanent action)
+ */
+router.post('/users/:id/ban', authenticate, requirePermission(PERMISSIONS.USER_BAN), async (req, res) => {
   if (req.params.id === req.user.id) {
     return res.status(400).json({ error: 'You cannot ban yourself.' });
   }
@@ -110,7 +130,11 @@ router.post('/users/:id/ban', async (req, res) => {
   }
 });
 
-router.post('/users/:id/restore', async (req, res) => {
+/**
+ * POST /api/admin/users/:id/restore
+ * Restore suspended/banned user - Moderators can restore
+ */
+router.post('/users/:id/restore', authenticate, requireModerator, async (req, res) => {
   try {
     const user = await prisma.user.update({
       where: { id: req.params.id },
@@ -132,7 +156,11 @@ router.post('/users/:id/restore', async (req, res) => {
   }
 });
 
-router.post('/users/:id/role', async (req, res) => {
+/**
+ * POST /api/admin/users/:id/role
+ * Change user role - Admins only (sensitive operation)
+ */
+router.post('/users/:id/role', authenticate, requirePermission(PERMISSIONS.USER_PROMOTE), async (req, res) => {
   const parsed = roleSchema.safeParse(req.body);
   if (!parsed.success) {
     return res.status(400).json({ error: parsed.error.errors });
@@ -159,7 +187,11 @@ router.post('/users/:id/role', async (req, res) => {
   }
 });
 
-router.delete('/users/:id', async (req, res) => {
+/**
+ * DELETE /api/admin/users/:id
+ * Delete user account - Admins only (permanent action)
+ */
+router.delete('/users/:id', authenticate, requirePermission(PERMISSIONS.USER_DELETE), async (req, res) => {
   if (req.params.id === req.user.id) {
     return res.status(400).json({ error: 'You cannot delete your own account.' });
   }

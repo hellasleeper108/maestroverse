@@ -581,6 +581,7 @@ enum TokenType {
 enum UserRole {
   STUDENT
   FACULTY
+  MODERATOR
   ADMIN
 }
 
