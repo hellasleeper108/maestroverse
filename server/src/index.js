@@ -111,12 +111,27 @@ if (!isProd) {
 }
 
 if (isProd) {
+  // Force HTTPS in production with host validation to prevent open redirect attacks
   app.use((req, res, next) => {
     if (!req.secure) {
-      const host = req.headers.host;
-      if (host) {
-        return res.redirect(301, `https://${host}${req.originalUrl}`);
+      // Validate host against allowed origins to prevent open redirect vulnerability
+      const allowedHosts = allowedOrigins.map((origin) => {
+        try {
+          return new URL(origin).host;
+        } catch {
+          return null;
+        }
+      }).filter(Boolean);
+
+      const requestHost = req.headers.host;
+
+      // Only redirect if host is in the allowed list
+      if (requestHost && allowedHosts.includes(requestHost)) {
+        return res.redirect(301, `https://${requestHost}${req.originalUrl}`);
       }
+
+      // If host is not allowed, return 400 Bad Request
+      return res.status(400).send('Invalid host header');
     }
     return next();
   });

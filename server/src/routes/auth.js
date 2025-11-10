@@ -1,5 +1,6 @@
 import express from 'express';
 import bcrypt from 'bcryptjs';
+import crypto from 'crypto';
 import { PrismaClient } from '@prisma/client';
 import { z } from 'zod';
 import passport from '../config/passport.js';
@@ -583,7 +584,8 @@ router.post('/sso/callback', async (req, res) => {
     if (!user) {
       // Create new user from SSO
       const username = email.split('@')[0];
-      const randomPassword = await bcrypt.hash(Math.random().toString(36), 12);
+      // Generate cryptographically secure random password for SSO users
+      const randomPassword = await bcrypt.hash(crypto.randomBytes(32).toString('hex'), 12);
 
       user = await prisma.user.create({
         data: {
