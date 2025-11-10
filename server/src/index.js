@@ -22,6 +22,7 @@ import searchRoutes from './routes/search.js';
 import adminRoutes from './routes/admin.js';
 import mimRoutes from './routes/mim.js';
 import filesRoutes from './routes/files.js';
+import testRbacRoutes from './routes/test-rbac.js';
 import { apiRateLimiter } from './middleware/rateLimiter.js';
 
 // OAuth configuration
@@ -169,6 +170,11 @@ app.use('/api/mim', mimRoutes);
 app.use('/api/search', searchRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/files', filesRoutes); // Secure file serving with signed URLs
+
+// Test RBAC routes (only in development/test environments)
+if (process.env.NODE_ENV !== 'production') {
+  app.use('/api/test-rbac', testRbacRoutes);
+}
 
 // 404 handler
 app.use((req, res) => {
