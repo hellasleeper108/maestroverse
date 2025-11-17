@@ -15,8 +15,8 @@
     "prisma:studio": "prisma studio"
   },
   "dependencies": {
-    "@prisma/client": "^6.18.0",
-    "argon2": "^0.31.2",
+    "@prisma/client": "^6.19.0",
+    "argon2": "^0.44.0",
     "bcryptjs": "^2.4.3",
     "connect-pg-simple": "^9.0.1",
     "cookie-parser": "^1.4.6",
@@ -42,7 +42,7 @@
     "zxcvbn": "^4.4.2"
   },
   "devDependencies": {
-    "nodemon": "^3.0.1",
+    "nodemon": "^3.1.11",
     "prisma": "^5.2.0"
   }
 }
